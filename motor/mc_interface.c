@@ -104,19 +104,19 @@ static volatile motor_if_state_t m_motor_2;
 
 // Sampling variables
 #ifndef ADC_SAMPLE_MAX_LEN
-#define ADC_SAMPLE_MAX_LEN		1000 // 20 byte per sample
+#define ADC_SAMPLE_MAX_LEN		8 // 20 byte per sample
 #endif
-__attribute__((section(".ram4"))) static volatile int16_t m_curr0_samples[ADC_SAMPLE_MAX_LEN];
-__attribute__((section(".ram4"))) static volatile int16_t m_curr1_samples[ADC_SAMPLE_MAX_LEN];
-__attribute__((section(".ram4"))) static volatile int16_t m_curr2_samples[ADC_SAMPLE_MAX_LEN];
-__attribute__((section(".ram4"))) static volatile int16_t m_ph1_samples[ADC_SAMPLE_MAX_LEN];
-__attribute__((section(".ram4"))) static volatile int16_t m_ph2_samples[ADC_SAMPLE_MAX_LEN];
-__attribute__((section(".ram4"))) static volatile int16_t m_ph3_samples[ADC_SAMPLE_MAX_LEN];
-__attribute__((section(".ram4"))) static volatile int16_t m_vzero_samples[ADC_SAMPLE_MAX_LEN];
-__attribute__((section(".ram4"))) static volatile uint8_t m_status_samples[ADC_SAMPLE_MAX_LEN];
-__attribute__((section(".ram4"))) static volatile int16_t m_curr_fir_samples[ADC_SAMPLE_MAX_LEN];
-__attribute__((section(".ram4"))) static volatile int16_t m_f_sw_samples[ADC_SAMPLE_MAX_LEN];
-__attribute__((section(".ram4"))) static volatile int8_t m_phase_samples[ADC_SAMPLE_MAX_LEN];
+static volatile int16_t m_curr0_samples[ADC_SAMPLE_MAX_LEN];
+static volatile int16_t m_curr1_samples[ADC_SAMPLE_MAX_LEN];
+static volatile int16_t m_curr2_samples[ADC_SAMPLE_MAX_LEN];
+static volatile int16_t m_ph1_samples[ADC_SAMPLE_MAX_LEN];
+static volatile int16_t m_ph2_samples[ADC_SAMPLE_MAX_LEN];
+static volatile int16_t m_ph3_samples[ADC_SAMPLE_MAX_LEN];
+static volatile int16_t m_vzero_samples[ADC_SAMPLE_MAX_LEN];
+static volatile uint8_t m_status_samples[ADC_SAMPLE_MAX_LEN];
+static volatile int16_t m_curr_fir_samples[ADC_SAMPLE_MAX_LEN];
+static volatile int16_t m_f_sw_samples[ADC_SAMPLE_MAX_LEN];
+static volatile int8_t m_phase_samples[ADC_SAMPLE_MAX_LEN];
 
 static volatile int m_sample_len;
 static volatile int m_sample_int;
