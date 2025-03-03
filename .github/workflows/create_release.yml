@@ -1,0 +1,79 @@
+name: Create Release
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+*'
+
+jobs:
+  create_release:
+    name: Create Release
+    permissions:
+      contents: write
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract Version
+        run: |
+          TAG="${{github.ref_name}}"
+          echo "VERSION=${TAG#v}" >> $GITHUB_ENV
+
+          CONTROLLERS="ENNOID_150V_mk8 JetFleetF6_20s JetFleetF6_24s JetFleetF6_32s Little_FOCer Little_FOCer_V3 Little_FOCer_V3_1 Little_FOCer_V4 TRONIC_250R Thor300_20s Thor301 Thor400 Thor400v2 adv200 adv500 ubox_single_100 ubox_single_75 ubox_single_80 ubox_single_85_200 ubox_v1_75_micro ubox_v1_75_typec ubox_v2_100 ubox_v2_75 x12_pro24 x12_pro30"
+
+          FW_MAJOR=$(grep "#define FW_VERSION_MAJOR" conf_general.h | awk '{print $3}')
+          FW_MINOR=$(grep "#define FW_VERSION_MINOR" conf_general.h | awk '{print $3}')
+          FW_VERSION="$FW_MAJOR.$FW_MINOR"
+
+          HW_NAME=$(grep "#define FW_NAME" hwconf/hw.h | head -n 1 | cut -d '"' -f 2)
+          XTRAS_VERSION=$(echo $HW_NAME | grep -o '[0-9]\+\.[0-9]\+$')
+
+          SUFFIX="-$FW_VERSION-$HW_NAME"
+
+          echo "CONTROLLERS=${CONTROLLERS}" >> $GITHUB_ENV
+          echo "FW_VERSION=${FW_VERSION}" >> $GITHUB_ENV
+          echo "XTRAS_VERSION=${XTRAS_VERSION}" >> $GITHUB_ENV
+          echo "SUFFIX=${SUFFIX}" >> $GITHUB_ENV
+          ARTIFACTS=""
+          for C in $CONTROLLERS; do
+            ARTIFACTS+="$C$SUFFIX.bin,";
+          done
+          echo "ARTIFACTS=${ARTIFACTS}all-firmwares$SUFFIX.zip,all-elves$SUFFIX.zip" >> $GITHUB_ENV
+
+      - name: Install Arm GNU Toolchain (arm-none-eabi-gcc)
+        uses: carlosperate/arm-none-eabi-gcc-action@v1
+        with:
+          release: '10.3-2021.10'
+
+      - name: Build
+        run: make -j32 ${{env.CONTROLLERS}}
+
+      - name: Prepare Targets
+        run: |
+          for C in $CONTROLLERS; do
+            mv build/$C/$C.bin "./$C$SUFFIX.bin";
+            mv build/$C/$C.elf "./$C$SUFFIX.elf";
+          done
+          zip all-firmwares$SUFFIX.zip *.bin
+          zip all-elves$SUFFIX.zip *.elf
+
+      - name: Install Changelog Generation Dependencies
+        run: sudo apt-get install python3-git
+
+      - name: Generate Release Notes
+        run: |
+          echo "**DISCLAIMER: USE AT YOUR OWN RISK!!!**" > release_notes.md
+          echo "" >> release_notes.md
+          python changelog.py >> release_notes.md
+
+      - name: Create Release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{github.ref}}
+          name: VESC Firmware ${{env.FW_VERSION}} Refloat Extras ${{env.XTRAS_VERSION}}
+          draft: true
+          artifacts: "${{env.ARTIFACTS}}"
+          bodyFile: "release_notes.md"
+          allowUpdates: true
