@@ -4845,10 +4845,15 @@ static void update_valpha_vbeta(motor_all_state_t *motor, float mod_alpha, float
 	Vb = (ADC_V_L2_VOLTS - ofs_volt[1]) * ((VIN_R1 + VIN_R2) / VIN_R2) * ADC_VOLTS_PH_FACTOR;
 	Vc = (ADC_V_L3_VOLTS - ofs_volt[2]) * ((VIN_R1 + VIN_R2) / VIN_R2) * ADC_VOLTS_PH_FACTOR;
 #else
+	#ifdef HW_HAS_NO_PHASE_SENSE //silly gt controller (shitass thing)
+	Va = v_alpha
+	Vb = -0.5f * v_alpha + SQRT3_BY_2 * v_beta
+	Vc = -0.5f * v_beta - SQRT3_BY_2 * v_beta
+	#else
 	Va = (ADC_V_L1_VOLTS - ofs_volt[0]) * ((VIN_R1 + VIN_R2) / VIN_R2) * ADC_VOLTS_PH_FACTOR;
 	Vb = (ADC_V_L3_VOLTS - ofs_volt[2]) * ((VIN_R1 + VIN_R2) / VIN_R2) * ADC_VOLTS_PH_FACTOR;
 	Vc = (ADC_V_L2_VOLTS - ofs_volt[1]) * ((VIN_R1 + VIN_R2) / VIN_R2) * ADC_VOLTS_PH_FACTOR;
-#endif
+	#endif
 #endif
 
 	// Deadtime compensation
@@ -4880,9 +4885,10 @@ static void update_valpha_vbeta(motor_all_state_t *motor, float mod_alpha, float
 
 	// v_alpha = 2/3*Va - 1/3*Vb - 1/3*Vc
 	// v_beta  = 1/sqrt(3)*Vb - 1/sqrt(3)*Vc
+	#ifndef HW_HAS_NO_PHASE_SENSE
 	float v_alpha = (1.0 / 3.0) * (2.0 * Va - Vb - Vc);
 	float v_beta = ONE_BY_SQRT3 * (Vb - Vc);
-
+	#endif
 	// Keep the modulation updated so that the filter stays updated
 	// even when the motor is undriven.
 	if (motor->m_state != MC_STATE_RUNNING) {

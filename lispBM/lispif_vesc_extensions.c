@@ -2867,7 +2867,7 @@ static lbm_value ext_raw_adc_voltage(lbm_value *args, lbm_uint argn) {
 #else
 		return ENC_SYM_EERROR;
 #endif
-	} else if (motor == 1) {
+	} else if (motor == 1) { //this shit needs to be updated to not use adc ones, but va/vb/vc from motor shit. 
 		Va = (ADC_V_L1_VOLTS - ofs1) * scale;
 		Vb = (ADC_V_L2_VOLTS - ofs2) * scale;
 		Vc = (ADC_V_L3_VOLTS - ofs3) * scale;
