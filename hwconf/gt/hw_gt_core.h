@@ -21,7 +21,7 @@
 #define HW_GT_CORE_H_
 
 #ifdef HW_GT_IS_MK1
-#define HW_NAME					"GT"
+#define HW_NAME					"Gt"
 #else
 #error "Must include hardware type"
 #endif
