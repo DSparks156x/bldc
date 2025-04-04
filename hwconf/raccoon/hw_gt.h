@@ -17,11 +17,11 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
     */
 
-#ifndef HW_EXAMPLE_H_
-#define HW_EXAMPLE_H_
+#ifndef HW_GT_H_
+#define HW_GT_H_
 
-#define HW_EXAMPLE_IS_MK1
+#define HW_GT_IS_MK1
 
-#include "hw_example_core.h"
+#include "hw_gt_core.h"
 
-#endif /* HW_EXAMPLE_H_ */
+#endif /* HW_GT_H_ */

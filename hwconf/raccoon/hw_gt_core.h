@@ -20,39 +20,44 @@
 #ifndef HW_GT_CORE_H_
 #define HW_GT_CORE_H_
 
-#define HW_NAME					"gt"
-
+#ifdef HW_GT_IS_MK1
+#define HW_NAME					"GT"
+#else
+#error "Must include hardware type"
+#endif
 
 #define HW_MAJOR				1
 #define HW_MINOR				0
 
 // HW properties
+#define HW_HAS_DRV8301
+#define HW_HAS_3_SHUNTS
+#define HW_HAS_PHASE_FILTERS
 #define HW_HAS_PHASE_SHUNTS
-#define HW_HAS_NO_PHASE_SENSE
 
 // Macros
-// #define ENABLE_GATE()			palSetPad(GPIOB, 5)
-// #define DISABLE_GATE()			palClearPad(GPIOB, 5)
-// #define DCCAL_ON()
-// #define DCCAL_OFF()
-// #define IS_DRV_FAULT()			(!palReadPad(GPIOB, 7))
+#define ENABLE_GATE()			palSetPad(GPIOB, 5)
+#define DISABLE_GATE()			palClearPad(GPIOB, 5)
+#define DCCAL_ON()
+#define DCCAL_OFF()
+#define IS_DRV_FAULT()			(!palReadPad(GPIOB, 7))
 
-// #define PHASE_FILTER_GPIO		GPIOC
-// #define PHASE_FILTER_PIN		13
-// #define PHASE_FILTER_ON()		palSetPad(PHASE_FILTER_GPIO, PHASE_FILTER_PIN)
-// #define PHASE_FILTER_OFF()		palClearPad(PHASE_FILTER_GPIO, PHASE_FILTER_PIN)
+#define PHASE_FILTER_GPIO		GPIOC
+#define PHASE_FILTER_PIN		13
+#define PHASE_FILTER_ON()		palSetPad(PHASE_FILTER_GPIO, PHASE_FILTER_PIN)
+#define PHASE_FILTER_OFF()		palClearPad(PHASE_FILTER_GPIO, PHASE_FILTER_PIN)
 
-// #define CURRENT_FILTER_ON()		palSetPad(GPIOD, 2)
-// #define CURRENT_FILTER_OFF()	palClearPad(GPIOD, 2)
+#define CURRENT_FILTER_ON()		palSetPad(GPIOD, 2)
+#define CURRENT_FILTER_OFF()	palClearPad(GPIOD, 2)
 
-// #define LED_GREEN_GPIO			GPIOB
-// #define LED_GREEN_PIN			0
-// #define LED_RED_GPIO			GPIOB
-// #define LED_RED_PIN				1
-// #define LED_GREEN_ON()			palSetPad(LED_GREEN_GPIO, LED_GREEN_PIN)
-// #define LED_GREEN_OFF()			palClearPad(LED_GREEN_GPIO, LED_GREEN_PIN)
-// #define LED_RED_ON()			palSetPad(LED_RED_GPIO, LED_RED_PIN)
-// #define LED_RED_OFF()			palClearPad(LED_RED_GPIO, LED_RED_PIN)
+#define LED_GREEN_GPIO			GPIOB
+#define LED_GREEN_PIN			0
+#define LED_RED_GPIO			GPIOB
+#define LED_RED_PIN				1
+#define LED_GREEN_ON()			palSetPad(LED_GREEN_GPIO, LED_GREEN_PIN)
+#define LED_GREEN_OFF()			palClearPad(LED_GREEN_GPIO, LED_GREEN_PIN)
+#define LED_RED_ON()			palSetPad(LED_RED_GPIO, LED_RED_PIN)
+#define LED_RED_OFF()			palClearPad(LED_RED_GPIO, LED_RED_PIN)
 
 /*
  * ADC Vector
@@ -125,45 +130,46 @@
 #define ADC_VOLTS(ch)			((float)ADC_Value[ch] / 4096.0 * V_REG)
 
 // COMM-port ADC GPIOs
-#define HW_ADC_EXT_GPIO			GPIOC
-#define HW_ADC_EXT_PIN			0
-#define HW_ADC_EXT2_GPIO		GPIOC
-#define HW_ADC_EXT2_PIN			1
+#define HW_ADC_EXT_GPIO			GPIOA
+#define HW_ADC_EXT_PIN			5
+#define HW_ADC_EXT2_GPIO		GPIOA
+#define HW_ADC_EXT2_PIN			6
 
 // UART Peripheral
-// #define HW_UART_DEV				SD3
-// #define HW_UART_GPIO_AF			GPIO_AF_USART3
-// #define HW_UART_TX_PORT			GPIOB
-// #define HW_UART_TX_PIN			10
-// #define HW_UART_RX_PORT			GPIOB
-// #define HW_UART_RX_PIN			11
+#define HW_UART_DEV				SD3
+#define HW_UART_GPIO_AF			GPIO_AF_USART3
+#define HW_UART_TX_PORT			GPIOB
+#define HW_UART_TX_PIN			10
+#define HW_UART_RX_PORT			GPIOB
+#define HW_UART_RX_PIN			11
 
 // Permanent UART Peripheral
 #define HW_UART_P_BAUD			115200
-#define HW_UART_P_DEV			SD3
-#define HW_UART_P_GPIO_AF		GPIO_AF_USART3
-#define HW_UART_P_TX_PORT		GPIOD
-#define HW_UART_P_TX_PIN		8 // This is a mistake in the HW. We have to use a hack to use UART5.
-#define HW_UART_P_RX_PORT		GPIOD
-#define HW_UART_P_RX_PIN		9
+#define HW_UART_P_DEV			SD4
+#define HW_UART_P_DEV_TX		SD5 // UART for TX, due to mistake below
+#define HW_UART_P_GPIO_AF		GPIO_AF_UART4
+#define HW_UART_P_TX_PORT		GPIOC
+#define HW_UART_P_TX_PIN		12 // This is a mistake in the HW. We have to use a hack to use UART5.
+#define HW_UART_P_RX_PORT		GPIOC
+#define HW_UART_P_RX_PIN		11
 
 // ICU Peripheral for servo decoding
-// #define HW_USE_SERVO_TIM4
-// #define HW_ICU_TIMER			TIM4
-// #define HW_ICU_TIM_CLK_EN()		RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, ENABLE)
-// #define HW_ICU_DEV				ICUD4
-// #define HW_ICU_CHANNEL			ICU_CHANNEL_1
-// #define HW_ICU_GPIO_AF			GPIO_AF_TIM4
-// #define HW_ICU_GPIO				GPIOB
-// #define HW_ICU_PIN				6
+#define HW_USE_SERVO_TIM4
+#define HW_ICU_TIMER			TIM4
+#define HW_ICU_TIM_CLK_EN()		RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, ENABLE)
+#define HW_ICU_DEV				ICUD4
+#define HW_ICU_CHANNEL			ICU_CHANNEL_1
+#define HW_ICU_GPIO_AF			GPIO_AF_TIM4
+#define HW_ICU_GPIO				GPIOB
+#define HW_ICU_PIN				6
 
 // I2C Peripheral
-#define HW_I2C_DEV				I2CD1
-#define HW_I2C_GPIO_AF			GPIO_AF_I2C1
+#define HW_I2C_DEV				I2CD2
+#define HW_I2C_GPIO_AF			GPIO_AF_I2C2
 #define HW_I2C_SCL_PORT			GPIOB
-#define HW_I2C_SCL_PIN			6
+#define HW_I2C_SCL_PIN			10
 #define HW_I2C_SDA_PORT			GPIOB
-#define HW_I2C_SDA_PIN			7
+#define HW_I2C_SDA_PIN			11
 
 // Hall/encoder pins
 #define HW_HALL_ENC_GPIO1		GPIOC
@@ -184,44 +190,32 @@
 #define HW_ENC_TIM_ISR_VEC		TIM3_IRQHandler
 
 // SPI pins
-// #define HW_SPI_DEV				SPID1
-// #define HW_SPI_GPIO_AF			GPIO_AF_SPI1
-// #define HW_SPI_PORT_NSS			GPIOB
-// #define HW_SPI_PIN_NSS			11
-// #define HW_SPI_PORT_SCK			GPIOA
-// #define HW_SPI_PIN_SCK			5
-// #define HW_SPI_PORT_MOSI		GPIOA
-// #define HW_SPI_PIN_MOSI			7
-// #define HW_SPI_PORT_MISO		GPIOA
-// #define HW_SPI_PIN_MISO			6
+#define HW_SPI_DEV				SPID1
+#define HW_SPI_GPIO_AF			GPIO_AF_SPI1
+#define HW_SPI_PORT_NSS			GPIOB
+#define HW_SPI_PIN_NSS			11
+#define HW_SPI_PORT_SCK			GPIOA
+#define HW_SPI_PIN_SCK			5
+#define HW_SPI_PORT_MOSI		GPIOA
+#define HW_SPI_PIN_MOSI			7
+#define HW_SPI_PORT_MISO		GPIOA
+#define HW_SPI_PIN_MISO			6
 
 // SPI for DRV8301
-// #define DRV8301_MOSI_GPIO		GPIOB
-// #define DRV8301_MOSI_PIN		4
-// #define DRV8301_MISO_GPIO		GPIOB
-// #define DRV8301_MISO_PIN		3
-// #define DRV8301_SCK_GPIO		GPIOC
-// #define DRV8301_SCK_PIN			10
-// #define DRV8301_CS_GPIO			GPIOC
-// #define DRV8301_CS_PIN			9
-
-
-//IMU (LSM6DSL?)
-#define LSM6DS3_NSS_GPIO		GPIOD
-#define LSM6DS3_NSS_PIN			1
-#define LSM6DS3_SCK_GPIO		GPIOA
-#define LSM6DS3_SCK_PIN			5
-#define LSM6DS3_MOSI_GPIO		GPIOA
-#define LSM6DS3_MOSI_PIN		7
-#define LSM6DS3_MISO_GPIO		GPIOA
-#define LSM6DS3_MISO_PIN		6
-
+#define DRV8301_MOSI_GPIO		GPIOB
+#define DRV8301_MOSI_PIN		4
+#define DRV8301_MISO_GPIO		GPIOB
+#define DRV8301_MISO_PIN		3
+#define DRV8301_SCK_GPIO		GPIOC
+#define DRV8301_SCK_PIN			10
+#define DRV8301_CS_GPIO			GPIOC
+#define DRV8301_CS_PIN			9
 
 // Measurement macros
-// #define ADC_V_L1				ADC_Value[ADC_IND_SENS1]
-// #define ADC_V_L2				ADC_Value[ADC_IND_SENS2]
-// #define ADC_V_L3				ADC_Value[ADC_IND_SENS3]
-// #define ADC_V_ZERO				(ADC_Value[ADC_IND_VIN_SENS] / 2)
+#define ADC_V_L1				ADC_Value[ADC_IND_SENS1]
+#define ADC_V_L2				ADC_Value[ADC_IND_SENS2]
+#define ADC_V_L3				ADC_Value[ADC_IND_SENS3]
+#define ADC_V_ZERO				(ADC_Value[ADC_IND_VIN_SENS] / 2)
 
 // Macros
 #define READ_HALL1()			palReadPad(HW_HALL_ENC_GPIO1, HW_HALL_ENC_PIN1)
@@ -252,5 +246,5 @@
 #define HW_LIM_DUTY_MAX			0.0, 0.99
 #define HW_LIM_TEMP_FET			-40.0, 110.0
 
-#endif /* HW_EXAMPLE_CORE_H_ */
+#endif /* HW_GT_CORE_H_ */
 
