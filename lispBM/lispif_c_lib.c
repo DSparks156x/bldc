@@ -349,7 +349,7 @@ static float lib_io_read_analog(VESC_PIN pin_vesc) {
 	} else if (pin_vesc == VESC_PIN_ADC2) {
 		res = ADC_VOLTS(ADC_IND_EXT2);
 	}
-	#ebduf
+	#endif
 	return res;
 }
 
