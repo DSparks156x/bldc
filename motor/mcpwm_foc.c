@@ -4499,6 +4499,8 @@ static void control_current(motor_all_state_t *motor, float dt) {
 	state_m->vd = state_m->vd_int + Ierr_d * conf_now->foc_current_kp * d_gain_scale;
 	state_m->vq = state_m->vq_int + Ierr_q * conf_now->foc_current_kp;
 
+	state_m->vd_pi = state_m->vd; //storing raw pi controller voltages for use in HW_NO_PHASE_SENSE 
+	state_m->vq_pi = state_m->vq;
 	// Decoupling. Using feedforward this compensates for the fact that the equations of a PMSM
 	// are not really decoupled (the d axis current has impact on q axis voltage and visa-versa):
 	//      Resistance  Inductance   Cross terms   Back-EMF   (see www.mathworks.com/help/physmod/sps/ref/pmsm.html)
@@ -4578,8 +4580,10 @@ static void control_current(motor_all_state_t *motor, float dt) {
 	update_valpha_vbeta(motor, state_m->mod_alpha_raw, state_m->mod_beta_raw);
 
 	// Dead time compensated values for vd and vq. Note that these are not used to control the switching times.
+	#ifndef HW_HAS_NO_PHASE_SENSE //Dont think it make sense to do this if alpha and beta were calculated from an earlier, undecoupled vd/vq.
 	state_m->vd = c * motor->m_motor_state.v_alpha + s * motor->m_motor_state.v_beta;
 	state_m->vq = c * motor->m_motor_state.v_beta  - s * motor->m_motor_state.v_alpha;
+	#endif
 
 	mc_audio_state *audio = &motor->m_audio;
 	switch (audio->mode) {
@@ -4903,6 +4907,11 @@ static void update_valpha_vbeta(motor_all_state_t *motor, float mod_alpha, float
 		ofs_volt = conf_now->foc_offsets_voltage;
 	}
 
+#ifdef HW_HAS_NO_PHASE_SENSE //Calculate v_alpha and v_beta for HW_NO_PHASE_SENSE
+	float v_alpha = state_m->phase_cos * state_m->vd_pi - state_m->phase_sin * state_m->vq_pi;
+	float v_beta = state_m->phase_cos * state_m->vq_pi + state_m->phase_sin * state_m->vd_pi;
+#endif
+
 #ifdef HW_HAS_DUAL_MOTORS
 #ifdef HW_HAS_3_SHUNTS
 	if (&m_motor_1 != motor) {
@@ -4927,13 +4936,25 @@ static void update_valpha_vbeta(motor_all_state_t *motor, float mod_alpha, float
 #endif
 #else
 #ifdef HW_HAS_3_SHUNTS
-	Va = (ADC_V_L1_VOLTS - ofs_volt[0]) * ((VIN_R1 + VIN_R2) / VIN_R2) * ADC_VOLTS_PH_FACTOR;
-	Vb = (ADC_V_L2_VOLTS - ofs_volt[1]) * ((VIN_R1 + VIN_R2) / VIN_R2) * ADC_VOLTS_PH_FACTOR;
-	Vc = (ADC_V_L3_VOLTS - ofs_volt[2]) * ((VIN_R1 + VIN_R2) / VIN_R2) * ADC_VOLTS_PH_FACTOR;
+	#ifdef HW_HAS_NO_PHASE_SENSE
+		Va = v_alpha;
+		Vb = -0.5f * v_alpha + SQRT3_BY_2 * v_beta;
+		Vc = -0.5f * v_alpha - SQRT3_BY_2 * v_beta;
+	#else
+		Va = (ADC_V_L1_VOLTS - ofs_volt[0]) * ((VIN_R1 + VIN_R2) / VIN_R2) * ADC_VOLTS_PH_FACTOR;
+		Vb = (ADC_V_L2_VOLTS - ofs_volt[1]) * ((VIN_R1 + VIN_R2) / VIN_R2) * ADC_VOLTS_PH_FACTOR;
+		Vc = (ADC_V_L3_VOLTS - ofs_volt[2]) * ((VIN_R1 + VIN_R2) / VIN_R2) * ADC_VOLTS_PH_FACTOR;
+	#endif
 #else
-	Va = (ADC_V_L1_VOLTS - ofs_volt[0]) * ((VIN_R1 + VIN_R2) / VIN_R2) * ADC_VOLTS_PH_FACTOR;
-	Vb = (ADC_V_L3_VOLTS - ofs_volt[2]) * ((VIN_R1 + VIN_R2) / VIN_R2) * ADC_VOLTS_PH_FACTOR;
-	Vc = (ADC_V_L2_VOLTS - ofs_volt[1]) * ((VIN_R1 + VIN_R2) / VIN_R2) * ADC_VOLTS_PH_FACTOR;
+	#ifdef HW_HAS_NO_PHASE_SENSE 
+		Va = v_alpha;
+		Vb = -0.5f * v_alpha - SQRT3_BY_2 * v_beta; //vb and vc are flipped from usual inverse clarck, just like voltages below..... 
+		Vc = -0.5f * v_alpha + SQRT3_BY_2 * v_beta;
+	#else
+		Va = (ADC_V_L1_VOLTS - ofs_volt[0]) * ((VIN_R1 + VIN_R2) / VIN_R2) * ADC_VOLTS_PH_FACTOR;
+		Vb = (ADC_V_L3_VOLTS - ofs_volt[2]) * ((VIN_R1 + VIN_R2) / VIN_R2) * ADC_VOLTS_PH_FACTOR;
+		Vc = (ADC_V_L2_VOLTS - ofs_volt[1]) * ((VIN_R1 + VIN_R2) / VIN_R2) * ADC_VOLTS_PH_FACTOR;
+	#endif
 #endif
 #endif
 
@@ -4966,9 +4987,10 @@ static void update_valpha_vbeta(motor_all_state_t *motor, float mod_alpha, float
 
 	// v_alpha = 2/3*Va - 1/3*Vb - 1/3*Vc
 	// v_beta  = 1/sqrt(3)*Vb - 1/sqrt(3)*Vc
+	#ifndef HW_HAS_NO_PHASE_SENSE //No sense to do these calculations if the inverse was done for the phase voltages.
 	float v_alpha = (1.0 / 3.0) * (2.0 * Va - Vb - Vc);
 	float v_beta = ONE_BY_SQRT3 * (Vb - Vc);
-
+	#endif
 	// Keep the modulation updated so that the filter stays updated
 	// even when the motor is undriven.
 	if (motor->m_state != MC_STATE_RUNNING) {
