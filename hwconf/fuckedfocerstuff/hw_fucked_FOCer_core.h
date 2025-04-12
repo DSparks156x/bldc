@@ -21,7 +21,7 @@
 #define HW_FUCKED_FOCER_CORE_H_
 
 #ifdef LFOC_IS_V3_1
-  #define HW_NAME                 "fucked_FOCer_V3_1_no_vsense"
+  #define HW_NAME                 "fucked_FOCer_V3_1"
   #define LFOC_IS_V3
 #elif defined(LFOC_IS_V3)
   #define HW_NAME                 "fucked_FOCer_V3"
@@ -38,11 +38,11 @@
 
 #define HW_HAS_3_SHUNTS
 
-#define HW_HAS_NO_PHASE_SENSE
+//#define HW_HAS_NO_PHASE_SENSE
 
 
 #ifdef LFOC_IS_V3
-//#define HW_HAS_PHASE_FILTERS
+#define HW_HAS_PHASE_FILTERS
 #define PHASE_FILTER_GPIO       GPIOC
 #define PHASE_FILTER_PIN        13
 #define PHASE_FILTER_ON()       palSetPad(PHASE_FILTER_GPIO, PHASE_FILTER_PIN)
@@ -265,7 +265,6 @@
 #define ADC_V_L1                ADC_Value[ADC_IND_SENS1]
 #define ADC_V_L2                ADC_Value[ADC_IND_SENS2]
 #define ADC_V_L3                ADC_Value[ADC_IND_SENS3]
-
 #else
 #define ADC_V_L1				0   //may not have voltage measurement but it needs it to build. 
 #define ADC_V_L2				0

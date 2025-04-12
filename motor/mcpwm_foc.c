@@ -91,20 +91,36 @@ static volatile bool pid_thd_stop;
 		TIM8->CCR3 = duty3; \
 		TIM8->CR1 &= ~TIM_CR1_UDIS;
 #else
-#define TIMER_UPDATE_DUTY_M1(duty1, duty2, duty3) \
+	#ifdef HW_IS_GT //GT isnt a 3 shunt but its current measurement is on phase 1 and 2.... 
+	#define TIMER_UPDATE_DUTY_M1(duty1, duty2, duty3) \
+		TIM1->CR1 |= TIM_CR1_UDIS; \
+		TIM1->CCR1 = duty1; \
+		TIM1->CCR2 = duty2; \
+		TIM1->CCR3 = duty3; \
+		TIM1->CR1 &= ~TIM_CR1_UDIS;
+
+	#define TIMER_UPDATE_DUTY_M2(duty1, duty2, duty3) \
+		TIM8->CR1 |= TIM_CR1_UDIS; \
+		TIM8->CCR1 = duty1; \
+		TIM8->CCR2 = duty2; \
+		TIM8->CCR3 = duty3; \
+		TIM8->CR1 &= ~TIM_CR1_UDIS;
+	#else
+	#define TIMER_UPDATE_DUTY_M1(duty1, duty2, duty3) \
 		TIM1->CR1 |= TIM_CR1_UDIS; \
 		TIM1->CCR1 = duty1; \
 		TIM1->CCR2 = duty3; \
 		TIM1->CCR3 = duty2; \
 		TIM1->CR1 &= ~TIM_CR1_UDIS;
-#define TIMER_UPDATE_DUTY_M2(duty1, duty2, duty3) \
+	#define TIMER_UPDATE_DUTY_M2(duty1, duty2, duty3) \
 		TIM8->CR1 |= TIM_CR1_UDIS; \
 		TIM8->CCR1 = duty1; \
 		TIM8->CCR2 = duty3; \
 		TIM8->CCR3 = duty2; \
 		TIM8->CR1 &= ~TIM_CR1_UDIS;
+	#endif
 #endif
-
+//phase numbering fuckery
 #define TIMER_UPDATE_SAMP(samp) \
 		TIM2->CCR2 = (samp / 2);
 
@@ -4908,8 +4924,23 @@ static void update_valpha_vbeta(motor_all_state_t *motor, float mod_alpha, float
 	}
 
 #ifdef HW_HAS_NO_PHASE_SENSE //Calculate v_alpha and v_beta for HW_NO_PHASE_SENSE
-	float v_alpha = state_m->phase_cos * state_m->vd_pi - state_m->phase_sin * state_m->vq_pi;
-	float v_beta = state_m->phase_cos * state_m->vq_pi + state_m->phase_sin * state_m->vd_pi;
+	float vd_pi_filt = 0;
+	float vq_pi_filt = 0;
+	
+	UTILS_NAN_ZERO(vd_pi_filt);
+	UTILS_NAN_ZERO(vq_pi_filt);
+
+	UTILS_LP_FAST(vd_pi_filt, state_m->vd_pi, 0.2);
+	UTILS_LP_FAST(vq_pi_filt, state_m->vq_pi, 0.2);
+
+
+
+	//float v_alpha = state_m->phase_cos * state_m->vd_pi - state_m->phase_sin * state_m->vq_pi;
+	//float v_beta = state_m->phase_cos * state_m->vq_pi + state_m->phase_sin * state_m->vd_pi;
+
+	float v_alpha = state_m->phase_cos * vd_pi_filt - state_m->phase_sin * vq_pi_filt;
+	float v_beta = state_m->phase_cos * vq_pi_filt + state_m->phase_sin * vd_pi_filt;
+
 #endif
 
 #ifdef HW_HAS_DUAL_MOTORS
@@ -4948,8 +4979,8 @@ static void update_valpha_vbeta(motor_all_state_t *motor, float mod_alpha, float
 #else
 	#ifdef HW_HAS_NO_PHASE_SENSE 
 		Va = v_alpha;
-		Vb = -0.5f * v_alpha - SQRT3_BY_2 * v_beta; //vb and vc are flipped from usual inverse clarck, just like voltages below..... 
-		Vc = -0.5f * v_alpha + SQRT3_BY_2 * v_beta;
+		Vb = -0.5f * v_alpha + SQRT3_BY_2 * v_beta; //vb and vc are maybe flipped???? my current measurement is on phases 1 and 2. 
+		Vc = -0.5f * v_alpha - SQRT3_BY_2 * v_beta;
 	#else
 		Va = (ADC_V_L1_VOLTS - ofs_volt[0]) * ((VIN_R1 + VIN_R2) / VIN_R2) * ADC_VOLTS_PH_FACTOR;
 		Vb = (ADC_V_L3_VOLTS - ofs_volt[2]) * ((VIN_R1 + VIN_R2) / VIN_R2) * ADC_VOLTS_PH_FACTOR;

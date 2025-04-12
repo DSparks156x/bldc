@@ -43,7 +43,7 @@ void buzzer_beep(void) {
                   PAL_MODE_OUTPUT_PUSHPULL |
                   PAL_STM32_OSPEED_HIGHEST);
 	palSetPad(HW_ICU_GPIO, HW_ICU_PIN);
-    chThdSleepMilliseconds(50);
+    chThdSleepMilliseconds(150);
     palClearPad(HW_ICU_GPIO, HW_ICU_PIN);
 }
 

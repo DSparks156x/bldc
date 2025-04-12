@@ -31,7 +31,7 @@
 #define HW_HAS_PHASE_SHUNTS //It has phase shunts alright, only 2 of em.
 #define HW_HAS_NO_PHASE_SENSE //It has no phase voltage sensing. why. 
 #define HW_USE_INTERNAL_RC //It has no clock oscillator. godspeed FM you cheap fucks. 
-
+//#define INVERTED_SHUNT_POLARITY
 
 // Macros
 // #define ENABLE_GATE()			palSetPad(GPIOB, 5)
@@ -102,7 +102,7 @@
 #define VIN_R2					1.0
 #endif
 #ifndef CURRENT_AMP_GAIN
-#define CURRENT_AMP_GAIN		(0.02*(2/3))  //0.013 //maybe? 0.020/(2/3)(2200)/(1735+2200)
+#define CURRENT_AMP_GAIN		(0.02*(2.0/3.0))  //0.02*2/3
 #endif
 #ifndef CURRENT_SHUNT_RES
 #define CURRENT_SHUNT_RES		1
