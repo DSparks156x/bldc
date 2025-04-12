@@ -20,18 +20,17 @@
 #ifndef HW_GT_CORE_H_
 #define HW_GT_CORE_H_
 #define HW_IS_GT //inverts ADCs on the interface, so packages read "correctly"
-
 #define HW_NAME					"GT"
-
 
 #define HW_MAJOR				4
 #define HW_MINOR				20
 
 // HW properties
 #define HW_HAS_PHASE_SHUNTS //It has phase shunts alright, only 2 of em.
+#define HW_SHUNT_1_2 //phase shunts are on 1 and 2. basically treat it like a 3 shunt for phase order but measure 2 phases. 
 #define HW_HAS_NO_PHASE_SENSE //It has no phase voltage sensing. why. 
 #define HW_USE_INTERNAL_RC //It has no clock oscillator. godspeed FM you cheap fucks. 
-#define PHASE_LP_CONSTANT = 0.1
+#define PHASE_LP_CONSTANT = 0.1 //experimental shit. 
 
 // Macros
 #define LED_GREEN_ON() //it gets angry without these. obviously the gt controller doesnt have basic bitch status leds. 
@@ -58,12 +57,12 @@
 #define HW_ADC_CHANNELS			(HW_ADC_NBR_CONV * 3)
 
 // ADC Indexes
-#define ADC_IND_SENS1			8 //we dont have these silly things but they are still necessary so
+#define ADC_IND_SENS1			8 //we dont have these silly things but it doesnt like building without them. 
 #define ADC_IND_SENS2			8 //
 #define ADC_IND_SENS3			8 //
 #define ADC_IND_CURR1			0
 #define ADC_IND_CURR2			1
-//#define ADC_IND_INCURR			2 //may implement input current eventually but. not now. i dont think it actually does anything notably usefule, just mildly more accurate battery amp readings. which is probably good when the BMS will cutout over 32A. 
+//#define ADC_IND_INCURR			2 //may implement input current eventually but. not now. i dont think it actually does anything notably usefull, just mildly more accurate battery amp readings. which is probably good when the BMS will cutout over 32A. 
 #define ADC_IND_VIN_SENS		8
 #define ADC_IND_EXT				3
 #define ADC_IND_EXT2			4
@@ -100,8 +99,6 @@
 #define MEASURE_INPUT_CURRENT_OFFSET()	hw_gt_start_input_current_sensor_offset_measurement()
 #endif
 
-
-
 // NTC Termistors
 
 #define NTC_RES(adc_val)		(10000.0 / ((4095.0 / (float)adc_val) - 1.0)) // low sidefet dunno what the ntc setup is. will calculate eventually. 
@@ -113,7 +110,7 @@
 // Voltage on ADC channel
 #define ADC_VOLTS(ch)			((float)ADC_Value[ch] / 4096.0 * V_REG)
 
-// COMM-port ADC GPIOs
+// Footpad ADC GPIOs
 #define HW_ADC_EXT_GPIO			GPIOC
 #define HW_ADC_EXT_PIN			1
 #define HW_ADC_EXT2_GPIO		GPIOC
@@ -129,7 +126,7 @@
 #define HW_UART_RX_PIN			7
 
 
-// Permanent UART Peripheral
+// Permanent UART Peripheral - actually the bluetooth module 
 #define HW_UART_P_BAUD		115200
 #define HW_UART_P_DEV			SD3
 #define HW_UART_P_GPIO_AF		GPIO_AF_USART3
@@ -178,18 +175,13 @@
 #define HW_SPI_DEV				SPID1
 #define HW_SPI_GPIO_AF			GPIO_AF_SPI1
 #define HW_SPI_PORT_NSS		    GPIOA //unused pin on footpad. vesc gets angry if this isnt defined as well. 
-#define HW_SPI_PIN_NSS		    11
+#define HW_SPI_PIN_NSS		    11 
 #define HW_SPI_PORT_SCK		    GPIOA
 #define HW_SPI_PIN_SCK			5
 #define HW_SPI_PORT_MOSI		GPIOA
 #define HW_SPI_PIN_MOSI		    7
 #define HW_SPI_PORT_MISO		GPIOA
 #define HW_SPI_PIN_MISO		    6
-
-
-
-
-
 
 // IMU - LSM6DSL - SPI
 
@@ -228,13 +220,19 @@
 #define MCCONF_FOC_SAMPLE_V0_V7			false	// Run control loop in both v0 and v7 (requires phase shunts)
 #endif
 
+//Dead time override
+#define HW_DEAD_TIME_NSEC		1000.0 //I should probably calculate this correctly. this is probably high.  
+
 //Default motor conf 
-#define HW_DEAD_TIME_NSEC		1000.0
+
+
+
+
 
 
 
 // Setting limits
-#define HW_LIM_CURRENT			-100.0, 100.0
+#define HW_LIM_CURRENT			-95.0, 95.0
 #define HW_LIM_CURRENT_IN		-32, 32.0
 #define HW_LIM_CURRENT_ABS		0.0, 150.0
 #define HW_LIM_VIN				14.0, 92.0

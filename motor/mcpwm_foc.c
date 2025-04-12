@@ -91,7 +91,7 @@ static volatile bool pid_thd_stop;
 		TIM8->CCR3 = duty3; \
 		TIM8->CR1 &= ~TIM_CR1_UDIS;
 #else
-	#ifdef HW_IS_GT //GT isnt a 3 shunt but its current measurement is on phase 1 and 2.... 
+	#ifdef HW_SHUNT_1_2 //GT isnt a 3 shunt but its current measurement is on phase 1 and 2.... 
 	#define TIMER_UPDATE_DUTY_M1(duty1, duty2, duty3) \
 		TIM1->CR1 |= TIM_CR1_UDIS; \
 		TIM1->CCR1 = duty1; \
@@ -120,7 +120,7 @@ static volatile bool pid_thd_stop;
 		TIM8->CR1 &= ~TIM_CR1_UDIS;
 	#endif
 #endif
-//phase numbering fuckery
+
 #define TIMER_UPDATE_SAMP(samp) \
 		TIM2->CCR2 = (samp / 2);
 
@@ -4948,7 +4948,7 @@ static void update_valpha_vbeta(motor_all_state_t *motor, float mod_alpha, float
 	UTILS_NAN_ZERO(vd_pi_filt);
 	UTILS_NAN_ZERO(vq_pi_filt);
 	#ifndef PHASE_LP_CONSTANT
-	#define PHASE_LP_CONSTANT = 0.2;
+	#define PHASE_LP_CONSTANT = 0.2
 	#endif
 	UTILS_LP_FAST(vd_pi_filt, state_m->vd_pi, PHASE_LP_CONSTANT);
 	UTILS_LP_FAST(vq_pi_filt, state_m->vq_pi, PHASE_LP_CONSTANT);
