@@ -2138,7 +2138,11 @@ void mc_interface_mc_timer_isr(bool is_second_motor) {
 				if (is_second_motor) {
 					zero = (ADC_V_L4 + ADC_V_L5 + ADC_V_L6) / 3;
 				} else {
+					#ifndef HW_HAS_NO_PHASE_SENSE	
 					zero = (ADC_V_L1 + ADC_V_L2 + ADC_V_L3) / 3;
+					#else
+					zero = (mcpwm_foc_get_va()*VOLTAGE_TO_ADC_FACTOR + mcpwm_foc_get_vb()*VOLTAGE_TO_ADC_FACTOR + mcpwm_foc_get_vc()*VOLTAGE_TO_ADC_FACTOR) / 3;
+					#endif
 				}
 				m_phase_samples[m_sample_now] = (uint8_t)(mcpwm_foc_get_phase() / 360.0 * 250.0);
 //				m_phase_samples[m_sample_now] = (uint8_t)(mcpwm_foc_get_phase_observer() / 360.0 * 250.0);
@@ -2182,10 +2186,15 @@ void mc_interface_mc_timer_isr(bool is_second_motor) {
 						m_curr1_samples[m_sample_now] = ADC_curr_norm_value[1] * (8.0 / FAC_CURRENT);
 						m_curr2_samples[m_sample_now] = ADC_curr_norm_value[2] * (8.0 / FAC_CURRENT);
 					}					
-
+					#ifndef HW_HAS_NO_PHASE_SENSE
 					m_ph1_samples[m_sample_now] = ADC_V_L1 - zero;
 					m_ph2_samples[m_sample_now] = ADC_V_L2 - zero;
 					m_ph3_samples[m_sample_now] = ADC_V_L3 - zero;
+					#else
+					m_ph1_samples[m_sample_now] = mcpwm_foc_get_va()*VOLTAGE_TO_ADC_FACTOR - zero;
+					m_ph2_samples[m_sample_now] = mcpwm_foc_get_vb()*VOLTAGE_TO_ADC_FACTOR - zero;
+					m_ph3_samples[m_sample_now] = mcpwm_foc_get_vc()*VOLTAGE_TO_ADC_FACTOR - zero;
+					#endif
 				}
 			}
 

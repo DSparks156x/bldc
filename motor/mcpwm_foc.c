@@ -1444,6 +1444,20 @@ float mcpwm_foc_get_est_res(void) {
 	return get_motor_now()->m_res_est;
 }
 
+float mcpwm_foc_get_va(void) { //gt things
+	return get_motor_now()->m_motor_state.va;
+}
+
+float mcpwm_foc_get_vb(void) {
+	return get_motor_now()->m_motor_state.vb;
+}
+
+float mcpwm_foc_get_vc(void) {
+	return get_motor_now()->m_motor_state.vc;
+}
+
+
+
 // NOTE: Requires the regular HFI sensor mode to run
 float mcpwm_foc_get_est_ind(void) {
 	float real_bin0, imag_bin0;
@@ -3572,8 +3586,12 @@ void mcpwm_foc_adc_int_handler(void *p, uint32_t flags) {
 		motor_now->m_motor_state.i_abs_filter = 0.0;
 
 		// Track back emf
+		#ifndef HW_HAS_NO_PHASE_SENSE
 		update_valpha_vbeta(motor_now, 0.0, 0.0);
-
+		#else //no phase sense cant actually track motor while its not running since current controller isnt actually, running. so we assume 0. 
+		motor_now->m_motor_state.v_alpha = 0;
+		motor_now->m_motor_state.v_beta = 0;
+		#endif
 		// Run observer
 		foc_observer_update(motor_now->m_motor_state.v_alpha, motor_now->m_motor_state.v_beta,
 						motor_now->m_motor_state.i_alpha, motor_now->m_motor_state.i_beta,

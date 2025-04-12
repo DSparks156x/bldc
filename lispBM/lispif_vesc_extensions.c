@@ -2868,9 +2868,15 @@ static lbm_value ext_raw_adc_voltage(lbm_value *args, lbm_uint argn) {
 		return ENC_SYM_EERROR;
 #endif
 	} else if (motor == 1) {
+		#ifndef HW_HAS_NO_PHASE_SENSE
 		Va = (ADC_V_L1_VOLTS - ofs1) * scale;
 		Vb = (ADC_V_L2_VOLTS - ofs2) * scale;
 		Vc = (ADC_V_L3_VOLTS - ofs3) * scale;
+		#else
+		Va = mcpwm_foc_get_va();
+		Vb = mcpwm_foc_get_vb();
+		Vc = mcpwm_foc_get_vc();
+		#endif
 	} else {
 		return ENC_SYM_EERROR;
 	}
