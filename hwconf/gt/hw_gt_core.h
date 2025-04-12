@@ -34,24 +34,6 @@
 #define PHASE_LP_CONSTANT = 0.1
 
 // Macros
-// #define ENABLE_GATE()			palSetPad(GPIOB, 5)
-// #define DISABLE_GATE()			palClearPad(GPIOB, 5)
-// #define DCCAL_ON()
-// #define DCCAL_OFF()
-// #define IS_DRV_FAULT()			(!palReadPad(GPIOB, 7))
-
-// #define PHASE_FILTER_GPIO		GPIOC
-// #define PHASE_FILTER_PIN		13
-// #define PHASE_FILTER_ON()		palSetPad(PHASE_FILTER_GPIO, PHASE_FILTER_PIN)
-// #define PHASE_FILTER_OFF()		palClearPad(PHASE_FILTER_GPIO, PHASE_FILTER_PIN)
-
-// #define CURRENT_FILTER_ON()		palSetPad(GPIOD, 2)
-// #define CURRENT_FILTER_OFF()	palClearPad(GPIOD, 2)
-
-// #define LED_GREEN_GPIO			GPIOB
-// #define LED_GREEN_PIN			0
-// #define LED_RED_GPIO			GPIOB
-// #define LED_RED_PIN				1
 #define LED_GREEN_ON() //it gets angry without these. obviously the gt controller doesnt have basic bitch status leds. 
 #define LED_GREEN_OFF()
 #define LED_RED_ON()
