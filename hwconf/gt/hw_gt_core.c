@@ -57,24 +57,22 @@ void hw_init_gpio(void) {
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOE, ENABLE);
 
 
-	// GPIOA Configuration: Channel 1 to 3 as alternate function push-pull
-	palSetPadMode(GPIOE, 8, PAL_MODE_ALTERNATE(GPIO_AF_TIM1) | //1L - 1N
+	// GPIOE Configuration: Channel 1 to 3 as alternate function push-pull
+	palSetPadMode(GPIOE, 8, PAL_MODE_ALTERNATE(GPIO_AF_TIM1) | //1L
 			PAL_STM32_OSPEED_HIGHEST |
 			PAL_STM32_PUDR_FLOATING);
-	palSetPadMode(GPIOE, 9, PAL_MODE_ALTERNATE(GPIO_AF_TIM1) | //1H - 1
+	palSetPadMode(GPIOE, 9, PAL_MODE_ALTERNATE(GPIO_AF_TIM1) | //1H
 			PAL_STM32_OSPEED_HIGHEST |
 			PAL_STM32_PUDR_FLOATING);
-	palSetPadMode(GPIOE, 10, PAL_MODE_ALTERNATE(GPIO_AF_TIM1) | //2L - 2N
+	palSetPadMode(GPIOE, 10, PAL_MODE_ALTERNATE(GPIO_AF_TIM1) | //2L
 			PAL_STM32_OSPEED_HIGHEST |
 			PAL_STM32_PUDR_FLOATING);
-
-	palSetPadMode(GPIOE, 11, PAL_MODE_ALTERNATE(GPIO_AF_TIM1) | //2H - 2
+	palSetPadMode(GPIOE, 11, PAL_MODE_ALTERNATE(GPIO_AF_TIM1) | //2H
+			PAL_STM32_PUDR_FLOATING);
+	palSetPadMode(GPIOE, 12, PAL_MODE_ALTERNATE(GPIO_AF_TIM1) | //3L
 			PAL_STM32_OSPEED_HIGHEST |
 			PAL_STM32_PUDR_FLOATING);
-	palSetPadMode(GPIOE, 12, PAL_MODE_ALTERNATE(GPIO_AF_TIM1) | //3L - 3N
-			PAL_STM32_OSPEED_HIGHEST |
-			PAL_STM32_PUDR_FLOATING);
-	palSetPadMode(GPIOE, 13, PAL_MODE_ALTERNATE(GPIO_AF_TIM1) | //3H - 3
+	palSetPadMode(GPIOE, 13, PAL_MODE_ALTERNATE(GPIO_AF_TIM1) | //3H
 			PAL_STM32_OSPEED_HIGHEST |
 			PAL_STM32_PUDR_FLOATING);
 
@@ -83,26 +81,18 @@ void hw_init_gpio(void) {
 	palSetPadMode(HW_HALL_ENC_GPIO2, HW_HALL_ENC_PIN2, PAL_MODE_INPUT_PULLUP);
 	palSetPadMode(HW_HALL_ENC_GPIO3, HW_HALL_ENC_PIN3, PAL_MODE_INPUT_PULLUP);
 
-	// Fault pin
-	//palSetPadMode(GPIOB, 7, PAL_MODE_INPUT_PULLUP);
 
 	// ADC Pins
-	//palSetPadMode(GPIOA, 0, PAL_MODE_INPUT_ANALOG);
 	palSetPadMode(GPIOA, 1, PAL_MODE_INPUT_ANALOG); //vin channel 1
-	//palSetPadMode(GPIOA, 2, PAL_MODE_INPUT_ANALOG);
-	//palSetPadMode(GPIOA, 3, PAL_MODE_INPUT_ANALOG);
 	palSetPadMode(GPIOA, 4, PAL_MODE_INPUT_ANALOG);// fet temp channel 4
-	//palSetPadMode(GPIOA, 6, PAL_MODE_INPUT_ANALOG);
-
 	palSetPadMode(GPIOC, 0, PAL_MODE_INPUT_ANALOG); //ext1 channel 11 
 	palSetPadMode(GPIOC, 1, PAL_MODE_INPUT_ANALOG); //ext2 channel 10
 	palSetPadMode(GPIOC, 2, PAL_MODE_INPUT_ANALOG); //input current channel 12
 	palSetPadMode(GPIOC, 3, PAL_MODE_INPUT_ANALOG); //motor temp channel 13
-	palSetPadMode(GPIOC, 4, PAL_MODE_INPUT_ANALOG); //current 1 channel 14
-	palSetPadMode(GPIOC, 5, PAL_MODE_INPUT_ANALOG); //current 2 channel 15
-
-	//palSetPadMode(GPIOB, 0, PAL_MODE_INPUT_ANALOG);
-	//palSetPadMode(GPIOB, 1, PAL_MODE_INPUT_ANALOG);
+	palSetPadMode(GPIOC, 4, PAL_MODE_INPUT_ANALOG); //current phase 1 channel 14
+	palSetPadMode(GPIOC, 5, PAL_MODE_INPUT_ANALOG); //current phase 2 channel 15
+	//palSetPadMode(GPIOB, 0, PAL_MODE_INPUT_ANALOG);//current phase 1 vref - not really need. offset calibration inherently handles these. 
+	//palSetPadMode(GPIOB, 1, PAL_MODE_INPUT_ANALOG);//current phase 2 vref 
 
 	buzzer_beep();
 	

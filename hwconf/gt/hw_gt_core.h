@@ -111,6 +111,15 @@
 // Input voltage
 #define GET_INPUT_VOLTAGE()		((V_REG / 4095.0) * (float)ADC_Value[ADC_IND_VIN_SENS] * ((VIN_R1 + VIN_R2) / VIN_R2))
 
+//Input current GT cool like this..... may better enforce battery amp limits so scary BMS doesnt cut. 
+#ifdef HW_HAS_INPUT_CURRENT_SENSOR
+#define GET_INPUT_CURRENT()				hw_gt_read_input_current()
+#define GET_INPUT_CURRENT_OFFSET()		hw_gt_get_input_current_offset()
+#define MEASURE_INPUT_CURRENT_OFFSET()	hw_gt_start_input_current_sensor_offset_measurement()
+#endif
+
+
+
 // NTC Termistors
 
 #define NTC_RES(adc_val)		(10000.0 / ((4095.0 / (float)adc_val) - 1.0)) // low sidefet dunno what the ntc setup is. will calculate eventually. 

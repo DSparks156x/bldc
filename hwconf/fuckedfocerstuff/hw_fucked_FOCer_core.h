@@ -36,7 +36,7 @@
 #define HW_HAS_DRV8323S
 #endif
 
-//#define HW_HAS_3_SHUNTS
+#define HW_HAS_3_SHUNTS
 
 #define HW_HAS_NO_PHASE_SENSE
 
