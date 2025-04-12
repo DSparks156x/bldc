@@ -337,7 +337,7 @@ static bool lib_io_read(VESC_PIN pin_vesc) {
 
 static float lib_io_read_analog(VESC_PIN pin_vesc) {
 	float res = -1.0;
-	#ifdef HW_IS_GT //inverted ADC interface because balance packages expect 3.3v as sensor on, and FM controllers are 0v as sensor on. 
+	#ifdef HW_EXT_ADC_INVERTED //inverts ext adc for packages for a certain controller
 	if (pin_vesc == VESC_PIN_ADC1) {
 		res = 3.3 - ADC_VOLTS(ADC_IND_EXT);
 	} else if (pin_vesc == VESC_PIN_ADC2) {

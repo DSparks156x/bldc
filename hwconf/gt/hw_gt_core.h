@@ -19,7 +19,7 @@
 
 #ifndef HW_GT_CORE_H_
 #define HW_GT_CORE_H_
-#define HW_IS_GT //inverts ADCs on the interface, so packages read "correctly"
+
 #define HW_NAME					"GT"
 
 #define HW_MAJOR				4
@@ -31,6 +31,7 @@
 #define HW_HAS_NO_PHASE_SENSE //It has no phase voltage sensing. why. 
 #define HW_USE_INTERNAL_RC //It has no clock oscillator. godspeed FM you cheap fucks. 
 #define PHASE_LP_CONSTANT = 0.1 //experimental shit. 
+#define HW_EXT_ADC_INVERTED //inverts external ADCs on the c interface, so packages read "correctly"
 
 // Macros
 #define LED_GREEN_ON() //it gets angry without these. obviously the gt controller doesnt have basic bitch status leds. 
