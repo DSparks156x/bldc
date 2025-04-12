@@ -31,7 +31,7 @@
 #define HW_HAS_PHASE_SHUNTS //It has phase shunts alright, only 2 of em.
 #define HW_HAS_NO_PHASE_SENSE //It has no phase voltage sensing. why. 
 #define HW_USE_INTERNAL_RC //It has no clock oscillator. godspeed FM you cheap fucks. 
-//#define INVERTED_SHUNT_POLARITY
+#define PHASE_LP_CONSTANT = 0.1
 
 // Macros
 // #define ENABLE_GATE()			palSetPad(GPIOB, 5)
