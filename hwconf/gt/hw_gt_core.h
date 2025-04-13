@@ -30,7 +30,7 @@
 #define HW_SHUNT_1_2 //phase shunts are on 1 and 2. basically treat it like a 3 shunt for phase order but measure 2 phases. 
 #define HW_HAS_NO_PHASE_SENSE //It has no phase voltage sensing. why. 
 #define HW_USE_INTERNAL_RC //It has no clock oscillator. godspeed FM you cheap fucks. 
-#define PHASE_LP_CONSTANT = 0.1 //experimental shit. 
+#define PHASE_LP_CONSTANT   0.1 //experimental shit. 
 #define HW_EXT_ADC_INVERTED //inverts external ADCs on the c interface, so packages read "correctly"
 
 // Macros
