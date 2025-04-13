@@ -222,7 +222,7 @@
 #endif
 
 //Dead time override
-#define HW_DEAD_TIME_NSEC		1000.0 //I should probably calculate this correctly. this is probably high.  
+#define HW_DEAD_TIME_NSEC		360.0 //I should probably calculate this correctly. this is probably high.  
 
 //Default motor conf 
 
@@ -234,7 +234,7 @@
 
 // Setting limits
 #define HW_LIM_CURRENT			-95.0, 95.0
-#define HW_LIM_CURRENT_IN		-32, 32.0
+#define HW_LIM_CURRENT_IN		-100, 100.0
 #define HW_LIM_CURRENT_ABS		0.0, 150.0
 #define HW_LIM_VIN				14.0, 92.0
 #define HW_LIM_ERPM				-200e3, 200e3
