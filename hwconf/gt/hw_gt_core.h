@@ -32,6 +32,8 @@
 #define HW_USE_INTERNAL_RC //It has no clock oscillator. godspeed FM you cheap fucks. 
 #define PHASE_LP_CONSTANT   0.1 //experimental shit. 
 #define HW_EXT_ADC_INVERTED //inverts external ADCs on the c interface, so packages read "correctly"
+#define USE_DC_LINK_PHASE_PHASE_AMPS    95//Over this measured phase current ialpha and ibeta will be calculated from the DC link/input current sense. The gt controller phase measurement can only do 100A. 
+#define HW_HAS_INPUT_CURRENT_SENSOR //gt basically an axiom. 
 
 // Macros
 #define LED_GREEN_ON() //it gets angry without these. obviously the gt controller doesnt have basic bitch status leds. 
@@ -63,7 +65,7 @@
 #define ADC_IND_SENS3			8 //
 #define ADC_IND_CURR1			0
 #define ADC_IND_CURR2			1
-//#define ADC_IND_INCURR			2 //may implement input current eventually but. not now. i dont think it actually does anything notably usefull, just mildly more accurate battery amp readings. which is probably good when the BMS will cutout over 32A. 
+#define ADC_IND_INCURR			2 //HW gt will go brrr. 
 #define ADC_IND_VIN_SENS		8
 #define ADC_IND_EXT				3
 #define ADC_IND_EXT2			4
@@ -84,11 +86,16 @@
 #define VIN_R2					1.0
 #endif
 #ifndef CURRENT_AMP_GAIN
-#define CURRENT_AMP_GAIN		(0.02*(2.0/3.0))  //0.02*2/3
+#define CURRENT_AMP_GAIN		(0.02*(2.0/3.0))  //0.02v/a * 2/3 divider
 #endif
 #ifndef CURRENT_SHUNT_RES
 #define CURRENT_SHUNT_RES		1
 #endif
+#ifndef IN_CURRENT_GAIN
+#define IN_CURRENT_GAIN         (0.04*(2.0/3.0)) //0.04v/a * 2/3 divider
+#endif
+
+
 
 // Input voltage
 #define GET_INPUT_VOLTAGE()		((V_REG / 4095.0) * (float)ADC_Value[ADC_IND_VIN_SENS] * ((VIN_R1 + VIN_R2) / VIN_R2))

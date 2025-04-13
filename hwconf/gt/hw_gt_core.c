@@ -29,13 +29,21 @@
 
 // Variables
 static volatile bool i2c_running = false;
-
+static volatile float current_sensor_gain = 0.0;
+static volatile float input_current_sensor_gain = 0.0;
+static volatile float input_current_sensor_offset = 1.65;
+static volatile uint16_t input_current_sensor_offset_samples = 0;
+static volatile uint32_t input_current_sensor_offset_sum = 0;
+static volatile bool current_input_sensor_offset_start_measurement = false;
 // I2C configuration
 static const I2CConfig i2cfg = {
 		OPMODE_I2C,
 		100000,
 		STD_DUTY_CYCLE
 };
+
+//Functions
+static void terminal_cmd_gt_input_offset(int argc, const char **argv);
 
 void buzzer_beep(void) {
     // External Buzzer (using servo pin!)
@@ -96,6 +104,13 @@ void hw_init_gpio(void) {
 
 	buzzer_beep();
 	
+	//Terminal stuff
+	terminal_register_command_callback(
+		"gt_input_offset",
+		"Print gt input offset",
+		0,
+		terminal_cmd_gt_input_offset);
+
 }
 
 void hw_setup_adc_channels(void) {
@@ -219,4 +234,44 @@ void hw_try_restore_i2c(void) {
 
 		i2cReleaseBus(&HW_I2C_DEV);
 	}
+}
+
+float hw_gt_read_input_current(void) {
+	float ret_value = 0.0;
+	ret_value = ( (V_REG / 4095.0) * (float)ADC_Value[ADC_IND_INCURR] - input_current_sensor_offset ) / IN_CURRENT_GAIN;
+	return ret_value;
+}
+
+void hw_gt_get_input_current_offset(void){
+
+	if(current_input_sensor_offset_start_measurement){
+
+		if( input_current_sensor_offset_samples == 100 ){
+			current_input_sensor_offset_start_measurement = false;
+			input_current_sensor_offset = ((float)input_current_sensor_offset_sum) / 100.0;
+			input_current_sensor_offset *= (V_REG / 4095.0);
+		}
+		else{
+			input_current_sensor_offset_sum += 	ADC_Value[ADC_IND_INCURR];
+			input_current_sensor_offset_samples++;
+		}
+	}else{
+		input_current_sensor_offset_samples++;
+	}
+}
+
+void hw_gt_start_input_current_sensor_offset_measurement(void){
+	current_input_sensor_offset_start_measurement = true;
+	input_current_sensor_offset_samples = 0;
+	input_current_sensor_offset_sum = 0;
+}
+
+static void terminal_cmd_gt_input_offset(int argc, const char **argv) {
+	(void)argc;
+	(void)argv;
+
+	commands_printf("GT input current offset is set as %.8f", (double)input_current_sensor_offset);
+
+	commands_printf(" ");
+	return;
 }
