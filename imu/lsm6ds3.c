@@ -79,30 +79,7 @@ void lsm6ds3_init(i2c_bb_state *i2c_state,
 	// Accelerometer resolution and data rate
 	txb[0] = LSM6DS3_ACC_GYRO_CTRL1_XL;
 	txb[1] = LSM6DS3_ACC_GYRO_FS_XL_16g;
-	if (rate_hz <= 13) {
-		txb[1] |= LSM6DS3_ACC_GYRO_ODR_XL_13Hz;
-	} else if (rate_hz <= 26){
-		txb[1] |= LSM6DS3_ACC_GYRO_ODR_XL_26Hz;
-	} else if (rate_hz <= 52){
-		txb[1] |= LSM6DS3_ACC_GYRO_ODR_XL_52Hz;
-	} else if (rate_hz <= 104){
-		txb[1] |= LSM6DS3_ACC_GYRO_ODR_XL_104Hz;
-	} else if (rate_hz <= 208){
-		txb[1] |= LSM6DS3_ACC_GYRO_ODR_XL_208Hz;
-	} else if (rate_hz <= 416){
-		txb[1] |= LSM6DS3_ACC_GYRO_ODR_XL_416Hz;
-	} else if (rate_hz <= 833){
-		txb[1] |= LSM6DS3_ACC_GYRO_ODR_XL_833Hz;
-	} else if (rate_hz <= 1660 || is_trc == false){
-		// Note: On non-trc the accelerometer can go higher, gyro can't, and we
-		// need to read both out in sync so we need to limit the accelerometer
-		// to the same rate.
-		txb[1] |= LSM6DS3_ACC_GYRO_ODR_XL_1660Hz;
-	} else if (rate_hz <= 3330){
-		txb[1] |= LSM6DS3_ACC_GYRO_ODR_XL_3330Hz;
-	} else {
-		txb[1] |= LSM6DS3_ACC_GYRO_ODR_XL_6660Hz;
-	}
+	txb[1] |= LSM6DS3_ACC_GYRO_ODR_XL_6660Hz;
 
 	// Accelerometer filtering
 	#define LSM6DS3TRC_BW0_XL 0x1
@@ -110,11 +87,6 @@ void lsm6ds3_init(i2c_bb_state *i2c_state,
 	if (is_trc) {
 		// Always use accelerometer analog low-pass at 400Hz
 		txb[1] |= LSM6DS3TRC_BW0_XL;
-
-		if (filter >= IMU_FILTER_MEDIUM) {
-			// Accelerometer LPF1 at ODR/4
-			txb[1] |= LSM6DS3TRC_LPF1_BW_SEL;
-		}
 	} else if (rate_hz >= 208 && filter >= IMU_FILTER_MEDIUM) {
 		// Filter at ODR/4 for MEDIUM and ODR/8 for HIGH
 		// This filter also needs to be enabled in CTRL4_C
@@ -138,11 +110,14 @@ void lsm6ds3_init(i2c_bb_state *i2c_state,
 	if (is_trc) {
 		#define LSM6DS3TRC_LPF2_XL_EN 0x80
 		#define LSM6DS3TRC_HPCF_XL_ODR9 0x40
+		#define LSM6DS3TRC_HPCF_XL_ODR50 0x00
+		#define LSM6DS3TRC_HPCF_XL_ODR100 0x20
 		txb[0] = LSM6DS3_ACC_GYRO_CTRL8_XL;
 		txb[1] = 0;
-		if (filter == IMU_FILTER_HIGH) {
-			// Low-pass filter with ODR/9 data rate
-			txb[1] |= LSM6DS3TRC_LPF2_XL_EN | LSM6DS3TRC_HPCF_XL_ODR9;
+		if (filter == IMU_FILTER_MEDIUM) {
+			txb[1] |= LSM6DS3TRC_LPF2_XL_EN | LSM6DS3TRC_HPCF_XL_ODR50;
+		} else if (filter == IMU_FILTER_HIGH) {
+			txb[1] |= LSM6DS3TRC_LPF2_XL_EN | LSM6DS3TRC_HPCF_XL_ODR100;
 		}
 
 		res = i2c_bb_tx_rx(m_i2c_bb, lsm6ds3_addr, txb, 2, rxb, 1);
@@ -155,26 +130,29 @@ void lsm6ds3_init(i2c_bb_state *i2c_state,
 	// Gyro resolution and data rate
 	txb[0] = LSM6DS3_ACC_GYRO_CTRL2_G;
 	txb[1] = LSM6DS3_ACC_GYRO_FS_G_2000dps;
-	if (rate_hz <= 13){
-		txb[1] |= LSM6DS3_ACC_GYRO_ODR_G_13Hz;
-	} else if (rate_hz <= 26){
-		txb[1] |= LSM6DS3_ACC_GYRO_ODR_G_26Hz;
-	} else if (rate_hz <= 52){
-		txb[1] |= LSM6DS3_ACC_GYRO_ODR_G_52Hz;
-	} else if (rate_hz <= 104){
-		txb[1] |= LSM6DS3_ACC_GYRO_ODR_G_104Hz;
-	} else if (rate_hz <= 208){
-		txb[1] |= LSM6DS3_ACC_GYRO_ODR_G_208Hz;
-	} else if (rate_hz <= 416){
-		txb[1] |= LSM6DS3_ACC_GYRO_ODR_G_416Hz;
-	} else if (rate_hz <= 833){
-		txb[1] |= LSM6DS3_ACC_GYRO_ODR_G_833Hz;
-	} else if (rate_hz <= 1660 || is_trc == false){
-		txb[1] |= LSM6DS3_ACC_GYRO_ODR_G_1660Hz;
-	} else if (rate_hz <= 3330){
-		txb[1] |= LSM6DS3TRC_ACC_GYRO_ODR_G_3330Hz;
-	} else {
+
+	if (is_trc) {
 		txb[1] |= LSM6DS3TRC_ACC_GYRO_ODR_G_6660Hz;
+	} else {
+		// On non-TRC there is no dedicated configurable gyro filter, the filtering
+		// seems to depend on the actual ODR, so we can't oversample it.
+		if (rate_hz <= 13) {
+			txb[1] |= LSM6DS3_ACC_GYRO_ODR_G_13Hz;
+		} else if (rate_hz <= 26) {
+			txb[1] |= LSM6DS3_ACC_GYRO_ODR_G_26Hz;
+		} else if (rate_hz <= 52) {
+			txb[1] |= LSM6DS3_ACC_GYRO_ODR_G_52Hz;
+		} else if (rate_hz <= 104) {
+			txb[1] |= LSM6DS3_ACC_GYRO_ODR_G_104Hz;
+		} else if (rate_hz <= 208) {
+			txb[1] |= LSM6DS3_ACC_GYRO_ODR_G_208Hz;
+		} else if (rate_hz <= 416) {
+			txb[1] |= LSM6DS3_ACC_GYRO_ODR_G_416Hz;
+		} else if (rate_hz <= 833) {
+			txb[1] |= LSM6DS3_ACC_GYRO_ODR_G_833Hz;
+		} else {
+			txb[1] |= LSM6DS3_ACC_GYRO_ODR_G_1660Hz;
+		}
 	}
 	res = i2c_bb_tx_rx(m_i2c_bb, lsm6ds3_addr, txb, 2, rxb, 1);
 	if (!res){
@@ -184,11 +162,17 @@ void lsm6ds3_init(i2c_bb_state *i2c_state,
 
 	// Extra gyro filtering for TRC variant
 	if (is_trc) {
-		#define LSM6DS3TRC_FTYPE_1 0x1
+		#define LSM6DS3TRC_FTYPE_L 0x00
+		#define LSM6DS3TRC_FTYPE_M 0x01
+		#define LSM6DS3TRC_FTYPE_H 0x10
 		txb[0] = LSM6DS3_ACC_GYRO_CTRL6_G;  // Note on TRC the register is called CTRL6_C
 		txb[1] = 0;
-		if (filter == IMU_FILTER_HIGH) {
-			txb[1] |= LSM6DS3TRC_FTYPE_1;
+		if (filter == IMU_FILTER_LOW) {
+			txb[1] |= LSM6DS3TRC_FTYPE_L;
+		} else if (filter == IMU_FILTER_MEDIUM) {
+			txb[1] |= LSM6DS3TRC_FTYPE_M;
+		} else if (filter == IMU_FILTER_HIGH) {
+			txb[1] |= LSM6DS3TRC_FTYPE_H;
 		}
 
 		res = i2c_bb_tx_rx(m_i2c_bb, lsm6ds3_addr, txb, 2, rxb, 1);
@@ -203,10 +187,8 @@ void lsm6ds3_init(i2c_bb_state *i2c_state,
 	txb[0] = LSM6DS3_ACC_GYRO_CTRL4_C;
 	txb[1] = 0;
 	if (is_trc) {
-		if (filter >= IMU_FILTER_MEDIUM) {
-			// Enable gyroscope digital low-pass filter LPF1
-			txb[1] = LSM6DS3_ACC_GYRO_LPF1_SEL_G_ENABLED;
-		}
+		// Enable gyroscope digital low-pass filter LPF1
+		txb[1] = LSM6DS3_ACC_GYRO_LPF1_SEL_G_ENABLED;
 	} else if (rate_hz >= 208 && filter >= IMU_FILTER_MEDIUM) {
 		// Standard LSM6DS3 only: Set XL anti-aliasing filter to be manually configured
 		txb[1] = LSM6DS3_ACC_GYRO_BW_SCAL_ODR_ENABLED;
@@ -285,42 +267,42 @@ static THD_FUNCTION(lsm6ds3_thread, arg) {
 	(void)arg;
 	chRegSetThreadName("LSM6DS3");
 
-	systime_t iteration_timer = chVTGetSystemTimeX();
-	const systime_t desired_interval = US2ST(1000000 / rate_hz);
+	// One tick less to ensure the frequency is at least the configured one or a bit higher (US2ST rounds up)
+	const systime_t interval = US2ST(1000000 / rate_hz) - 1;
 
 	while (!chThdShouldTerminateX()) {
+		systime_t start_time = chVTGetSystemTimeX();
+
 		uint8_t txb[2];
 		uint8_t rxb[12];
 
 		// Read IMU output registers
 		txb[0] = LSM6DS3_ACC_GYRO_OUTX_L_G;
 		bool res = i2c_bb_tx_rx(m_i2c_bb, lsm6ds3_addr, txb, 1, rxb, 12);
+		if (res) {
+			// Parse 6 axis values
+			float gx = (float)((int16_t)((uint16_t)rxb[1] << 8) + rxb[0]) * 4.375 * (2000 / 125) / 1000;
+			float gy = (float)((int16_t)((uint16_t)rxb[3] << 8) + rxb[2]) * 4.375 * (2000 / 125) / 1000;
+			float gz = (float)((int16_t)((uint16_t)rxb[5] << 8) + rxb[4]) * 4.375 * (2000 / 125) / 1000;
+			float ax = (float)((int16_t)((uint16_t)rxb[7] << 8) + rxb[6]) * 0.061 * (16 >> 1) / 1000;
+			float ay = (float)((int16_t)((uint16_t)rxb[9] << 8) + rxb[8]) * 0.061 * (16 >> 1) / 1000;
+			float az = (float)((int16_t)((uint16_t)rxb[11] << 8) + rxb[10]) * 0.061 * (16 >> 1) / 1000;
 
-		// Parse 6 axis values
-		float gx = (float)((int16_t)((uint16_t)rxb[1] << 8) + rxb[0]) * 4.375 * (2000 / 125) / 1000;
-		float gy = (float)((int16_t)((uint16_t)rxb[3] << 8) + rxb[2]) * 4.375 * (2000 / 125) / 1000;
-		float gz = (float)((int16_t)((uint16_t)rxb[5] << 8) + rxb[4]) * 4.375 * (2000 / 125) / 1000;
-		float ax = (float)((int16_t)((uint16_t)rxb[7] << 8) + rxb[6]) * 0.061 * (16 >> 1) / 1000;
-		float ay = (float)((int16_t)((uint16_t)rxb[9] << 8) + rxb[8]) * 0.061 * (16 >> 1) / 1000;
-		float az = (float)((int16_t)((uint16_t)rxb[11] << 8) + rxb[10]) * 0.061 * (16 >> 1) / 1000;
-
-		if (res && read_callback) {
-			float tmp_accel[3] = {ax,ay,az}, tmp_gyro[3] = {gx,gy,gz}, tmp_mag[3] = {1,2,3};
-			read_callback(tmp_accel, tmp_gyro, tmp_mag);
-		}
-
-		// Delay between loops
-		iteration_timer += desired_interval;
-		systime_t current_time = chVTGetSystemTimeX();
-		systime_t remainin_sleep_time = iteration_timer - current_time;
-		if (remainin_sleep_time > 0 && remainin_sleep_time < desired_interval) {
-			// Sleep the remaining time.
-			chThdSleep(remainin_sleep_time);
+			if (res && read_callback) {
+				float tmp_accel[3] = {ax,ay,az}, tmp_gyro[3] = {gx,gy,gz}, tmp_mag[3] = {1,2,3};
+				read_callback(tmp_accel, tmp_gyro, tmp_mag);
+			}
 		} else {
-			// Read was too slow or CPU was too buzy, reset the schedule.
-			iteration_timer = current_time;
-			chThdSleep(desired_interval);
+			chThdSleep(1);
+			continue;
 		}
+
+		systime_t sleep_ticks = 1;
+		systime_t remaining_sleep_time = start_time + interval - chVTGetSystemTimeX();
+		if (remaining_sleep_time > 0 && remaining_sleep_time <= interval) {
+			sleep_ticks = remaining_sleep_time;
+		}
+
+		chThdSleep(sleep_ticks);
 	}
 }
-
