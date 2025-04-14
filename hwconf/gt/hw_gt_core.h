@@ -32,7 +32,6 @@
 #define HW_USE_INTERNAL_RC //It has no clock oscillator. godspeed FM you cheap fucks. 
 #define PHASE_LP_CONSTANT   0.1 //experimental shit. 
 #define HW_EXT_ADC_INVERTED //inverts external ADCs on the c interface, so packages read "correctly"
-#define USE_DC_LINK_PHASE_PHASE_AMPS    95//Over this measured phase current ialpha and ibeta will be calculated from the DC link/input current sense. The gt controller phase measurement can only do 100A. 
 #define HW_HAS_INPUT_CURRENT_SENSOR //gt basically an axiom. 
 
 // Macros
@@ -92,7 +91,7 @@
 #define CURRENT_SHUNT_RES		1
 #endif
 #ifndef IN_CURRENT_GAIN
-#define IN_CURRENT_GAIN         (0.04*(2.0/3.0)) //0.04v/a * 2/3 divider
+#define IN_CURRENT_GAIN         (-0.04*(2.0/3.0)) //0.04v/a * 2/3 divider
 #endif
 
 
