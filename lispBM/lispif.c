@@ -18,7 +18,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma GCC push_options
 #pragma GCC optimize ("Os")
 
 #include "lispif.h"
@@ -38,7 +37,7 @@
 #define LBM_MEMORY_BITMAP_SIZE_28K LBM_MEMORY_BITMAP_SIZE(448)
 
 #ifndef EXTENSION_STORAGE_SIZE
-#define EXTENSION_STORAGE_SIZE		302
+#define EXTENSION_STORAGE_SIZE		304
 #endif
 
 #ifndef ADC_SAMPLE_MAX_LEN
@@ -725,11 +724,15 @@ bool lispif_restart(bool print, bool load_code, bool load_imports) {
 		char ver_str[20];
 		sprintf(ver_str, "%08X", (unsigned int)flash_helper_app_crc());
 
+		bool load_imports_before = load_imports;
+		load_imports = false;
+
 		if (!lbm_image_exists() || strcmp(lbm_image_get_version(), ver_str) != 0) {
 			commands_printf_lisp("Preparing new image...");
 			flash_helper_erase_code(CODE_IND_LISP_CONST);
 			image_max_ind = 0;
 			lbm_image_create(ver_str);
+			load_imports = load_imports_before;
 		}
 
 		lbm_image_boot();
@@ -766,26 +769,26 @@ bool lispif_restart(bool print, bool load_code, bool load_imports) {
 			ext_load_callbacks[i](main_found);
 		}
 
-		if (!main_found) {
-			if (load_imports) {
-				if (code_len > code_chars + 3) {
-					int32_t ind = code_chars + 1;
-					uint16_t num_imports = buffer_get_uint16((uint8_t*)code_data, &ind);
+		if (load_imports) {
+			if (code_len > code_chars + 3) {
+				int32_t ind = code_chars + 1;
+				uint16_t num_imports = buffer_get_uint16((uint8_t*)code_data, &ind);
 
-					if (num_imports > 0 && num_imports < 500) {
-						for (int i = 0;i < num_imports;i++) {
-							char *name = code_data + ind;
-							ind += strlen(name) + 1;
-							int32_t offset = buffer_get_int32((uint8_t*)code_data, &ind);
-							int32_t len = buffer_get_int32((uint8_t*)code_data, &ind);
+				if (num_imports > 0 && num_imports < 500) {
+					for (int i = 0;i < num_imports;i++) {
+						char *name = code_data + ind;
+						ind += strlen(name) + 1;
+						int32_t offset = buffer_get_int32((uint8_t*)code_data, &ind);
+						int32_t len = buffer_get_int32((uint8_t*)code_data, &ind);
 
-							lbm_value val;
-							if (lbm_share_array_const(&val, code_data + offset, len)) {
-								lbm_define(name, val);
-							}
+						lbm_value val;
+						if (lbm_share_array_const(&val, code_data + offset, len)) {
+							lbm_define(name, val);
 						}
 					}
 				}
+
+				lbm_image_save_global_env();
 			}
 		}
 
@@ -871,5 +874,3 @@ static THD_FUNCTION(eval_thread, arg) {
 	lbm_run_eval();
 	lisp_thd_running = false;
 }
-
-#pragma GCC pop_options
