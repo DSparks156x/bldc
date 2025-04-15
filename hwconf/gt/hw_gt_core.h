@@ -27,7 +27,7 @@
 
 // HW properties
 #define HW_HAS_PHASE_SHUNTS //It has phase shunts alright, only 2 of em.
-#define HW_SHUNT_1_2 //phase shunts are on 1 and 2. basically treat it like a 3 shunt for phase order but measure 2 phases. 
+#define HW_SHUNT_1_2 //phase shunts are on 1 and 2. Vesc otherwise orders things differently. 
 #define HW_HAS_NO_PHASE_SENSE //It has no phase voltage sensing. why. 
 #define HW_USE_INTERNAL_RC  
 #define PHASE_LP_CONSTANT   0.1 //LP for vd and vq being used to calculate valpha and vbeta.  
@@ -224,10 +224,10 @@
 #define MCCONF_L_MAX_ABS_CURRENT		150.0	// The maximum absolute current above which a fault is generated
 #endif
 #ifndef MCCONF_L_IN_CURRENT_MAX
-#define MCCONF_L_IN_CURRENT_MAX         25
+#define MCCONF_L_IN_CURRENT_MAX         30
 #endif
 #ifndef MCCONF_L_IN_CURRENT_MIN
-#define MCCONF_L_IN_CURRENT_MIN         -25
+#define MCCONF_L_IN_CURRENT_MIN         -30
 #endif
 #ifndef MCCONF_FOC_SAMPLE_V0_V7
 #define MCCONF_FOC_SAMPLE_V0_V7			false	// Run control loop in both v0 and v7 (requires phase shunts)
@@ -240,7 +240,7 @@
 #ifndef MCCONF_FOC_MOTOR_R
 #define MCCONF_FOC_MOTOR_R      87.0
 #endif
-#define MCCONF_FOC_MOTOR_L
+#ifndef MCCONF_FOC_MOTOR_L
 #define MCCONF_FOC_MOTOR_L      198.0
 #endif
 #ifndef MCCONF_FOC_MOTOR_LD_LQ_DIFF
@@ -261,7 +261,7 @@
 #ifndef MCCONF_FOC_SHORT_LS_ON_ZERO_DUTY
 #define MCCONF_FOC_SHORT_LS_ON_ZERO_DUTY    1
 #endif
-#define MCCONF_L_MIN_VOLTAGE
+#ifndef MCCONF_L_MIN_VOLTAGE
 #define MCCONF_L_MIN_VOLTAGE        30
 #endif
 #ifndef MCCONF_L_MAX_VOLTAGE
