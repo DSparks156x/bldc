@@ -29,8 +29,8 @@
 #define HW_HAS_PHASE_SHUNTS //It has phase shunts alright, only 2 of em.
 #define HW_SHUNT_1_2 //phase shunts are on 1 and 2. basically treat it like a 3 shunt for phase order but measure 2 phases. 
 #define HW_HAS_NO_PHASE_SENSE //It has no phase voltage sensing. why. 
-#define HW_USE_INTERNAL_RC //It has no clock oscillator. godspeed FM you cheap fucks. 
-#define PHASE_LP_CONSTANT   0.1 //experimental shit. 
+#define HW_USE_INTERNAL_RC  
+#define PHASE_LP_CONSTANT   0.1 //LP for vd and vq being used to calculate valpha and vbeta.  
 #define HW_EXT_ADC_INVERTED //inverts external ADCs on the c interface, so packages read "correctly"
 #define HW_HAS_INPUT_CURRENT_SENSOR //gt basically an axiom. 
 
@@ -45,7 +45,7 @@
  *
  * 0:	IN14	CURR1 PC4 adc12
  * 1:	IN15	CURR2 PC5 adc12
- * 2:	IN12	INPUTCURR PC2 adc123 //Baller thing has input current sensing. gotta make sure the bms isnt lying about ah somehow, someone could use a larger battery....
+ * 2:	IN12	INPUTCURR PC2 adc123
  * 3:	IN11	ADC_EXT1 PC0 adc123
  * 4:	IN10	ADC_EXT2 PC1 adc123
  * 5:	IN13	TEMP_MOTOR PC3 adc123
@@ -59,7 +59,7 @@
 #define HW_ADC_CHANNELS			(HW_ADC_NBR_CONV * 3)
 
 // ADC Indexes
-#define ADC_IND_SENS1			8 //we dont have these silly things but it doesnt like building without them. 
+#define ADC_IND_SENS1			8 //GT doesnt have these silly things but it doesnt like building without them. 
 #define ADC_IND_SENS2			8 //
 #define ADC_IND_SENS3			8 //
 #define ADC_IND_CURR1			0
@@ -79,7 +79,7 @@
 #define V_REG					3.3
 #endif
 #ifndef VIN_R1
-#define VIN_R1					22.2868 // 20.05/0.861 = 23.2868 = (R1+R2) / R2 )
+#define VIN_R1					22.9045 // 20.05/0.861 = 23.2868 = (R1+R2) / R2 )
 #endif
 #ifndef VIN_R2
 #define VIN_R2					1.0
@@ -108,10 +108,10 @@
 
 // NTC Termistors
 
-#define NTC_RES(adc_val)		(10000.0 / ((4095.0 / (float)adc_val) - 1.0)) // low sidefet dunno what the ntc setup is. will calculate eventually. 
+#define NTC_RES(adc_val)		(10000.0 / ((4095.0 / (float)adc_val) - 1.0)) 
 #define NTC_TEMP(adc_ind)		(1.0 / ((logf(NTC_RES(ADC_Value[adc_ind]) / 10000.0) / 3380.0) + (1.0 / 298.15)) - 273.15)
 
-#define NTC_RES_MOTOR(adc_val)	(10000.0 / ((4095.0 / (float)adc_val) - 1.0)) // Motor temp sensor on low side. maybe right???? 
+#define NTC_RES_MOTOR(adc_val)	(10000.0 / ((4095.0 / (float)adc_val) - 1.0)) // Motor temp sensor on low side. 
 #define NTC_TEMP_MOTOR(beta)	(1.0 / ((logf(NTC_RES_MOTOR(ADC_Value[ADC_IND_TEMP_MOTOR]) / 10000.0) / beta) + (1.0 / 298.15)) - 273.15)
 
 // Voltage on ADC channel
@@ -133,7 +133,7 @@
 #define HW_UART_RX_PIN			3
 
 
-// Permanent UART Peripheral - actually the bluetooth module 
+// Permanent UART Peripheral - Bluetooth Module 
 #define HW_UART_P_BAUD		115200
 #define HW_UART_P_DEV			SD3
 #define HW_UART_P_GPIO_AF		GPIO_AF_USART3
@@ -181,7 +181,7 @@
 
 #define HW_SPI_DEV				SPID1
 #define HW_SPI_GPIO_AF			GPIO_AF_SPI1
-#define HW_SPI_PORT_NSS		    GPIOA //unused pin on footpad. vesc gets angry if this isnt defined as well. 
+#define HW_SPI_PORT_NSS		    GPIOA //unused pin on footpad. vesc gets angry if this isnt defined. 
 #define HW_SPI_PIN_NSS		    11 
 #define HW_SPI_PORT_SCK		    GPIOA
 #define HW_SPI_PIN_SCK			5
@@ -202,7 +202,7 @@
 #define LSM6DS3_MISO_PIN		6
 
 // Measurement macros
-#define ADC_V_L1				0   //may not have voltage measurement but it needs it to build. 
+#define ADC_V_L1				0   //placeholders. 
 #define ADC_V_L2				0
 #define ADC_V_L3				0
 
@@ -237,8 +237,94 @@
 #define HW_DEAD_TIME_NSEC		360.0 //I should probably calculate this correctly. this is probably high.  
 
 //Default motor conf 
+#ifndef MCCONF_FOC_MOTOR_R
+#define MCCONF_FOC_MOTOR_R      87.0
+#endif
+#define MCCONF_FOC_MOTOR_L
+#define MCCONF_FOC_MOTOR_L      198.0
+#endif
+#ifndef MCCONF_FOC_MOTOR_LD_LQ_DIFF
+#define MCCONF_FOC_MOTOR_LD_LQ_DIFF     40.0
+#endif
+#ifndef MCCONF_FOC_MOTOR_FLUX_LINKAGE
+#define MCCONF_FOC_MOTOR_FLUX_LINKAGE   27.0
+#endif
+#ifndef MCCONF_FOC_OBSERVER_GAIN
+#define MCCONF_FOC_OBSERVER_GAIN    0.8
+#endif
+#ifndef MCCONF_FOC_CURRENT_KP
+#define MCCONF_FOC_CURRENT_KP       0.1980
+#endif
+#ifndef MCCONF_FOC_CURRENT_KI
+#define MCCONF_FOC_CURRENT_KI       87.0
+#endif
+#ifndef MCCONF_FOC_SHORT_LS_ON_ZERO_DUTY
+#define MCCONF_FOC_SHORT_LS_ON_ZERO_DUTY    1
+#endif
+#define MCCONF_L_MIN_VOLTAGE
+#define MCCONF_L_MIN_VOLTAGE        30
+#endif
+#ifndef MCCONF_L_MAX_VOLTAGE
+#define MCCONF_L_MAX_VOLTAGE        83 //this will never trigger.... this thing cant measure more than ~78.8, but thats too low for ov fault in a onewheel.
+#endif
+#ifndef MCCONF_L_CURRENT_MAX
+#define MCCONF_L_CURRENT_MAX        85
+#endif
+#ifndef MCCONF_L_CURRENT_MIN
+#define MCCONF_L_CURRENT_MIN        -85
+#endif
+#ifndef MCCONF_SENSOR_MODE
+#define MCCONF_SENSOR_MODE          FOC_SENSOR_MODE_HALL
+#endif
+#ifndef MCCONF_HALL_TAB_0
+#define MCCONF_HALL_TAB_0       -1
+#endif
+#ifndef MCCONF_HALL_TAB_1
+#define MCCONF_HALL_TAB_1       -1
+#endif
+#ifndef MCCONF_HALL_TAB_2
+#define MCCONF_HALL_TAB_2       -1
+#endif
+#ifndef MCCONF_HALL_TAB_3
+#define MCCONF_HALL_TAB_3       -1
+#endif
+#ifndef MCCONF_HALL_TAB_4
+#define MCCONF_HALL_TAB_4       -1
+#endif
+#ifndef MCCONF_HALL_TAB_5
+#define MCCONF_HALL_TAB_5       -1
+#endif
+#ifndef MCCONF_HALL_TAB_6
+#define MCCONF_HALL_TAB_6       -1
+#endif
+#ifndef MCCONF_HALL_TAB_7
+#define MCCONF_HALL_TAB_7       -1
+#endif
 
 
+#ifndef MCCONF_SI_MOTOR_POLES
+#define MCCONF_SI_MOTOR_POLES       30
+#endif
+#ifndef MCCONF_SI_GEAR_RATIO
+#define MCCONF_SI_GEAR_RATIO        1
+#endif
+#ifndef MCCONF_SI_WHEEL_DIAMETER
+#define MCCONF_SI_WHEEL_DIAMETER    292
+#endif
+#ifndef MCCONF_SI_BATTERY_CELLS
+#define MCCONF_SI_BATTERY_CELLS     18
+#endif
+#ifndef MCCONF_SI_BATTERY_AH
+#define MCCONF_SI_BATTERY_AH        8.4
+#endif
+
+//Default app conf
+#ifndef APPCONF_IMU_ROT_YAW
+#define APPCONF_IMU_ROT_YAW         90
+#endif
+#ifndef APPCONF_IMU_SAMPLE_RATE
+#define APPCONF_IMU_SAMPLE_RATE     832
+#endif
 
 
 
