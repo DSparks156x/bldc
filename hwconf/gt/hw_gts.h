@@ -17,12 +17,13 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
     */
 
-#ifndef HW_GT_H_
-#define HW_GT_H_
+    #ifndef HW_GTS_H_
+    #define HW_GTS_H_
+    
+    #include "hw_gt_core.h"
 
-#include "hw_gt_core.h"
-
-#define GT
-#define HW_NAME					"GT"
-
-#endif /* HW_GT_H_ */
+    #define GTS
+    #define HW_NAME					"GTS"
+    
+    #endif /* HW_GTS_H_ */
+    

@@ -20,8 +20,6 @@
 #ifndef HW_GT_CORE_H_
 #define HW_GT_CORE_H_
 
-#define HW_NAME					"GT"
-
 #define HW_MAJOR				4
 #define HW_MINOR				20
 
@@ -78,33 +76,49 @@
 #ifndef V_REG
 #define V_REG					3.3
 #endif
-#ifndef VIN_R1
-#define VIN_R1					22.9045 // 20.05/0.861 = 23.2868 = (R1+R2) / R2 )
-#endif
 #ifndef VIN_R2
 #define VIN_R2					1.0
-#endif
-#ifndef CURRENT_AMP_GAIN
-#define CURRENT_AMP_GAIN		(0.02*(2.0/3.0))  //0.02v/a * 2/3 divider
 #endif
 #ifndef CURRENT_SHUNT_RES
 #define CURRENT_SHUNT_RES		1
 #endif
+
+
+#ifdef GTS
+#ifndef VIN_R1
+#define VIN_R1					????? // 20.05/0.861 = 23.2868 = (R1+R2) / R2 )
+#endif
+
+#ifndef CURRENT_AMP_GAIN
+#define CURRENT_AMP_GAIN		(0.02*(2.0/3.0))  //0.02v/a * 2/3 divider
+#endif
+
 #ifndef IN_CURRENT_GAIN
 #define IN_CURRENT_GAIN         (-0.04*(2.0/3.0)) //0.04v/a * 2/3 divider
 #endif
+#else //gt
+#ifndef VIN_R1
+#define VIN_R1					22.9045 // 20.05/0.861 = 23.2868 = (R1+R2) / R2 )
+#endif
 
+#ifndef CURRENT_AMP_GAIN
+#define CURRENT_AMP_GAIN		(0.02*(2.0/3.0))  //0.02v/a * 2/3 divider
+#endif
+
+#ifndef IN_CURRENT_GAIN
+#define IN_CURRENT_GAIN         (-0.04*(2.0/3.0)) //0.04v/a * 2/3 divider
+#endif
+#endif
 
 
 // Input voltage
 #define GET_INPUT_VOLTAGE()		((V_REG / 4095.0) * (float)ADC_Value[ADC_IND_VIN_SENS] * ((VIN_R1 + VIN_R2) / VIN_R2))
 
 //Input current GT cool like this..... may better enforce battery amp limits so scary BMS doesnt cut. 
-#ifdef HW_HAS_INPUT_CURRENT_SENSOR
 #define GET_INPUT_CURRENT()				hw_gt_read_input_current()
 #define GET_INPUT_CURRENT_OFFSET()		hw_gt_get_input_current_offset()
 #define MEASURE_INPUT_CURRENT_OFFSET()	hw_gt_start_input_current_sensor_offset_measurement()
-#endif
+
 
 // NTC Termistors
 
@@ -236,7 +250,7 @@
 //Dead time override
 #define HW_DEAD_TIME_NSEC		360.0 //I should probably calculate this correctly. this is probably high.  
 
-//Default motor conf 
+//Default motor conf
 #ifndef MCCONF_FOC_MOTOR_R
 #define MCCONF_FOC_MOTOR_R      87.0
 #endif
@@ -263,9 +277,6 @@
 #endif
 #ifndef MCCONF_L_MIN_VOLTAGE
 #define MCCONF_L_MIN_VOLTAGE        30
-#endif
-#ifndef MCCONF_L_MAX_VOLTAGE
-#define MCCONF_L_MAX_VOLTAGE        83 //this will never trigger.... this thing cant measure more than ~78.8, but thats too low for ov fault in a onewheel.
 #endif
 #ifndef MCCONF_L_CURRENT_MAX
 #define MCCONF_L_CURRENT_MAX        85
@@ -311,12 +322,33 @@
 #ifndef MCCONF_SI_WHEEL_DIAMETER
 #define MCCONF_SI_WHEEL_DIAMETER    292
 #endif
+
+//GT
+#ifdef GT
+#ifndef MCCONF_L_MAX_VOLTAGE
+#define MCCONF_L_MAX_VOLTAGE        83 //this will never trigger.... this thing cant measure more than ~78.8, but thats too low for ov fault in a onewheel.
+#endif
 #ifndef MCCONF_SI_BATTERY_CELLS
 #define MCCONF_SI_BATTERY_CELLS     18
 #endif
 #ifndef MCCONF_SI_BATTERY_AH
 #define MCCONF_SI_BATTERY_AH        8.4
 #endif
+#endif
+
+// GTS 
+#ifdef GTS
+#ifndef MCCONF_L_MAX_VOLTAGE
+#define MCCONF_L_MAX_VOLTAGE        119 //same as lim vin comment. this will trigger when we really shouldn't be triggering an OV fault, but the alternative is risking the fets blowing up. 
+#endif
+#ifndef MCCONF_SI_BATTERY_CELLS
+#define MCCONF_SI_BATTERY_CELLS     27
+#endif
+#ifndef MCCONF_SI_BATTERY_AH
+#define MCCONF_SI_BATTERY_AH        4.5
+#endif
+#endif
+
 
 //Default app conf
 #ifndef APPCONF_IMU_ROT_YAW
@@ -331,14 +363,28 @@
 
 
 // Setting limits
+//GT
+#ifdef GT
 #define HW_LIM_CURRENT			-95.0, 95.0
-#define HW_LIM_CURRENT_IN		-100, 100.0
+#define HW_LIM_CURRENT_IN		-32, 32.0
 #define HW_LIM_CURRENT_ABS		0.0, 150.0
 #define HW_LIM_VIN				14.0, 92.0
 #define HW_LIM_ERPM				-200e3, 200e3
 #define HW_LIM_DUTY_MIN			0.0, 0.1
 #define HW_LIM_DUTY_MAX			0.0, 0.99
-#define HW_LIM_TEMP_FET			-40.0, 95.0 //setting this low. GT Fets are shit. 
+#define HW_LIM_TEMP_FET			-40.0, 85.0 //setting this low. fet kaboom bad. 
+#endif
+//GTS
+#ifdef GTS
+#define HW_LIM_CURRENT			-95.0, 95.0
+#define HW_LIM_CURRENT_IN		-100, 100.0
+#define HW_LIM_CURRENT_ABS		0.0, 150.0
+#define HW_LIM_VIN				14.0, 119.0 //120v fets on a 27s controller is dumb to put it lightly. i dont know how to set this. We can risk going higher and fet go kaboom. We can keep it as it is and the rider goes down. Lose-lose. 
+#define HW_LIM_ERPM				-200e3, 200e3
+#define HW_LIM_DUTY_MIN			0.0, 0.1
+#define HW_LIM_DUTY_MAX			0.0, 0.99
+#define HW_LIM_TEMP_FET			-40.0, 85.0 //setting this low. fet kaboom bad.
+#endif
 
 #endif /* HW_GT_CORE_H_ */
 
