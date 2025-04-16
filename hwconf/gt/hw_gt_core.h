@@ -386,5 +386,9 @@
 #define HW_LIM_TEMP_FET			-40.0, 85.0 //setting this low. fet kaboom bad.
 #endif
 
+//HW Functions
+float hw_gt_read_input_current(void);
+void hw_gt_get_input_current_offset(void);
+void hw_gt_start_input_current_sensor_offset_measurement(void);
 #endif /* HW_GT_CORE_H_ */
 
