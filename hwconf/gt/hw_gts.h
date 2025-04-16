@@ -20,6 +20,7 @@
     #ifndef HW_GTS_H_
     #define HW_GTS_H_
     
+    #include "hw_gts_conf.h"
     #include "hw_gt_core.h"
 
     #define GTS

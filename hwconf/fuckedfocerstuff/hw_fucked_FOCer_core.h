@@ -20,6 +20,104 @@
 #ifndef HW_FUCKED_FOCER_CORE_H_
 #define HW_FUCKED_FOCER_CORE_H_
 
+//Default motor conf
+#ifndef MCCONF_FOC_MOTOR_R
+#define MCCONF_FOC_MOTOR_R      0.087
+#endif
+#ifndef MCCONF_FOC_MOTOR_L
+#define MCCONF_FOC_MOTOR_L      0.000198
+#endif
+#ifndef MCCONF_FOC_MOTOR_LD_LQ_DIFF
+#define MCCONF_FOC_MOTOR_LD_LQ_DIFF     0.000040
+#endif
+#ifndef MCCONF_FOC_MOTOR_FLUX_LINKAGE
+#define MCCONF_FOC_MOTOR_FLUX_LINKAGE   0.0280
+#endif
+#ifndef MCCONF_FOC_OBSERVER_GAIN
+#define MCCONF_FOC_OBSERVER_GAIN    8e5
+#endif
+#ifndef MCCONF_FOC_CURRENT_KP
+#define MCCONF_FOC_CURRENT_KP       0.1980
+#endif
+#ifndef MCCONF_FOC_CURRENT_KI
+#define MCCONF_FOC_CURRENT_KI       87.0
+#endif
+#ifndef MCCONF_FOC_SHORT_LS_ON_ZERO_DUTY
+#define MCCONF_FOC_SHORT_LS_ON_ZERO_DUTY    1
+#endif
+#ifndef MCCONF_L_MIN_VOLTAGE
+#define MCCONF_L_MIN_VOLTAGE        30
+#endif
+#ifndef MCCONF_L_CURRENT_MAX
+#define MCCONF_L_CURRENT_MAX        120
+#endif
+#ifndef MCCONF_L_CURRENT_MIN
+#define MCCONF_L_CURRENT_MIN        -120
+#endif
+#ifndef MCCONF_SENSOR_MODE
+#define MCCONF_SENSOR_MODE          FOC_SENSOR_MODE_HALL
+#endif
+#ifndef MCCONF_HALL_TAB_0
+#define MCCONF_HALL_TAB_0       -1
+#endif
+#ifndef MCCONF_HALL_TAB_1
+#define MCCONF_HALL_TAB_1       -1
+#endif
+#ifndef MCCONF_HALL_TAB_2
+#define MCCONF_HALL_TAB_2       -1
+#endif
+#ifndef MCCONF_HALL_TAB_3
+#define MCCONF_HALL_TAB_3       -1
+#endif
+#ifndef MCCONF_HALL_TAB_4
+#define MCCONF_HALL_TAB_4       -1
+#endif
+#ifndef MCCONF_HALL_TAB_5
+#define MCCONF_HALL_TAB_5       -1
+#endif
+#ifndef MCCONF_HALL_TAB_6
+#define MCCONF_HALL_TAB_6       -1
+#endif
+#ifndef MCCONF_HALL_TAB_7
+#define MCCONF_HALL_TAB_7       -1
+#endif
+#ifndef MCCONF_FOC_SL_ERPM_START
+#define MCCONF_FOC_SL_ERPM_START        1500
+#endif
+#ifndef MCCONF_FOC_SL_ERPM
+#define MCCONF_FOC_SL_ERPM      2000
+#endif
+#ifndef MCCONF_FOC_HALL_INTERP_ERPM
+#define MCCONF_FOC_HALL_INTERP_ERPM     250
+#endif
+#ifndef MCCONF_M_INVERT_DIRECTION
+#define MCCONF_M_INVERT_DIRECTION       0
+#endif
+
+#ifndef MCCONF_SI_MOTOR_POLES
+#define MCCONF_SI_MOTOR_POLES       30
+#endif
+#ifndef MCCONF_SI_GEAR_RATIO
+#define MCCONF_SI_GEAR_RATIO        1
+#endif
+#ifndef MCCONF_SI_WHEEL_DIAMETER
+#define MCCONF_SI_WHEEL_DIAMETER    279
+#endif
+
+#ifndef MCCONF_L_MAX_VOLTAGE
+#define MCCONF_L_MAX_VOLTAGE        92 //this will never trigger.... this thing cant measure more than ~78.8, but thats too low for ov fault in a onewheel.
+#endif
+#ifndef MCCONF_SI_BATTERY_CELLS
+#define MCCONF_SI_BATTERY_CELLS     18
+#endif
+#ifndef MCCONF_SI_BATTERY_AH
+#define MCCONF_SI_BATTERY_AH        9
+#endif
+
+
+
+
+
 #ifdef LFOC_IS_V3_1
   #define HW_NAME                 "fucked_FOCer_V3_1"
   #define LFOC_IS_V3
@@ -276,6 +374,16 @@
 #define READ_HALL2()            palReadPad(HW_HALL_ENC_GPIO2, HW_HALL_ENC_PIN2)
 #define READ_HALL3()            palReadPad(HW_HALL_ENC_GPIO3, HW_HALL_ENC_PIN3)
 
+
+
+
+
+
+
+
+
+
+
 // Default setting overrides
 #ifndef MCCONF_L_MIN_VOLTAGE
 #define MCCONF_L_MIN_VOLTAGE            15.0        // Minimum input voltage
@@ -316,7 +424,7 @@
 #define MCCONF_DEFAULT_MOTOR_TYPE       MOTOR_TYPE_FOC
 #endif
 #ifndef MCCONF_FOC_F_ZV
-#define MCCONF_FOC_F_ZV                 20000.0
+#define MCCONF_FOC_F_ZV                 26600.0
 #endif
 
 // Setting limits
