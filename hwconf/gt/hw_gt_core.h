@@ -377,7 +377,7 @@
 //GTS
 #ifdef GTS
 #define HW_LIM_CURRENT			-95.0, 95.0
-#define HW_LIM_CURRENT_IN		-100, 100.0
+#define HW_LIM_CURRENT_IN		-32, 32.0
 #define HW_LIM_CURRENT_ABS		0.0, 150.0
 #define HW_LIM_VIN				14.0, 119.0 //120v fets on a 27s controller is dumb to put it lightly. i dont know how to set this. We can risk going higher and fet go kaboom. We can keep it as it is and the rider goes down. Lose-lose. 
 #define HW_LIM_ERPM				-200e3, 200e3
