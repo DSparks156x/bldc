@@ -81,7 +81,7 @@
 #define MCCONF_SI_GEAR_RATIO        1
 #endif
 #ifndef MCCONF_SI_WHEEL_DIAMETER
-#define MCCONF_SI_WHEEL_DIAMETER    292
+#define MCCONF_SI_WHEEL_DIAMETER    0.292
 #endif
 
 #ifndef MCCONF_L_MAX_VOLTAGE

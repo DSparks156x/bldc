@@ -58,28 +58,28 @@
 #define MCCONF_SENSOR_MODE          FOC_SENSOR_MODE_HALL
 #endif
 #ifndef MCCONF_HALL_TAB_0
-#define MCCONF_HALL_TAB_0       -1
+#define MCCONF_HALL_TAB_0       255
 #endif
 #ifndef MCCONF_HALL_TAB_1
-#define MCCONF_HALL_TAB_1       -1
+#define MCCONF_HALL_TAB_1       135
 #endif
 #ifndef MCCONF_HALL_TAB_2
-#define MCCONF_HALL_TAB_2       -1
+#define MCCONF_HALL_TAB_2       67
 #endif
 #ifndef MCCONF_HALL_TAB_3
-#define MCCONF_HALL_TAB_3       -1
+#define MCCONF_HALL_TAB_3       101
 #endif
 #ifndef MCCONF_HALL_TAB_4
-#define MCCONF_HALL_TAB_4       -1
+#define MCCONF_HALL_TAB_4       1
 #endif
 #ifndef MCCONF_HALL_TAB_5
-#define MCCONF_HALL_TAB_5       -1
+#define MCCONF_HALL_TAB_5       167
 #endif
 #ifndef MCCONF_HALL_TAB_6
-#define MCCONF_HALL_TAB_6       -1
+#define MCCONF_HALL_TAB_6       35
 #endif
 #ifndef MCCONF_HALL_TAB_7
-#define MCCONF_HALL_TAB_7       -1
+#define MCCONF_HALL_TAB_7       255
 #endif
 #ifndef MCCONF_FOC_SL_ERPM_START
 #define MCCONF_FOC_SL_ERPM_START        1500
@@ -101,7 +101,7 @@
 #define MCCONF_SI_GEAR_RATIO        1
 #endif
 #ifndef MCCONF_SI_WHEEL_DIAMETER
-#define MCCONF_SI_WHEEL_DIAMETER    279
+#define MCCONF_SI_WHEEL_DIAMETER    0.279
 #endif
 
 #ifndef MCCONF_L_MAX_VOLTAGE
