@@ -62,7 +62,7 @@ static void (*m_read_callback)(float *acc, float *gyro, float *mag, float dt) = 
 
 void imu_init(imu_config *set) {
 	bool imu_changed = set->sample_rate_hz != m_settings.sample_rate_hz ||
-			set->type != m_settings.type;
+			set->type != m_settings.type || set->filter != m_settings.filter;
 
 	m_settings = *set;
 
