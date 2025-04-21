@@ -259,7 +259,7 @@ static void terminal_read_reg(int argc, const char **argv) {
 
 static THD_FUNCTION(lsm6ds3_thread, arg) {
 	(void)arg;
-	chRegSetThreadName("LSM6SD3");
+	chRegSetThreadName("LSM6DS3");
 
 	systime_t iteration_timer = chVTGetSystemTimeX();
 	const systime_t desired_interval = US2ST(1000000 / rate_hz);
