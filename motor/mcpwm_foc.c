@@ -4578,6 +4578,10 @@ static void control_current(motor_all_state_t *motor, float dt) {
 	state_m->vd -= dec_vd; //Negative sign as in the PMSM equations
 	state_m->vq += dec_vq + dec_bemf;
 
+	//state_m->vd_pi = state_m->vd; //storing raw pi controller voltages for use in HW_NO_PHASE_SENSE 
+	//state_m->vq_pi = state_m->vq; //decoupling could be useful. 
+
+
 	// Calculate the max length of the voltage space vector without overmodulation.
 	// Is simply 1/sqrt(3) * v_bus. See https://microchipdeveloper.com/mct5001:start. Adds margin with max_duty.
 	float max_v_mag = ONE_BY_SQRT3 * max_duty * state_m->v_bus * conf_now->foc_overmod_factor;
@@ -5006,10 +5010,16 @@ static void update_valpha_vbeta(motor_all_state_t *motor, float mod_alpha, float
 		Vc = (ADC_V_L3_VOLTS - ofs_volt[2]) * ((VIN_R1 + VIN_R2) / VIN_R2) * ADC_VOLTS_PH_FACTOR;
 	#endif
 #else
-	#ifdef HW_HAS_NO_PHASE_SENSE 
+	#ifdef HW_HAS_NO_PHASE_SENSE
+		#ifdef HW_SHUNT_1_2 //phase 2 and 3 are flipped on "normal" 2 shunt vescs. they are not flipped on GT.
 		Va = v_alpha;
-		Vb = -0.5f * v_alpha + SQRT3_BY_2 * v_beta; //vb and vc are maybe flipped???? my current measurement is on phases 1 and 2. 
+		Vb = -0.5f * v_alpha + SQRT3_BY_2 * v_beta;  
 		Vc = -0.5f * v_alpha - SQRT3_BY_2 * v_beta;
+		#else
+		Va = v_alpha;
+		Vb = -0.5f * v_alpha - SQRT3_BY_2 * v_beta;
+		Vc = -0.5f * v_alpha + SQRT3_BY_2 * v_beta;
+		#endif
 	#else
 		Va = (ADC_V_L1_VOLTS - ofs_volt[0]) * ((VIN_R1 + VIN_R2) / VIN_R2) * ADC_VOLTS_PH_FACTOR;
 		Vb = (ADC_V_L3_VOLTS - ofs_volt[2]) * ((VIN_R1 + VIN_R2) / VIN_R2) * ADC_VOLTS_PH_FACTOR;

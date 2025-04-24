@@ -20,9 +20,9 @@
 #ifndef HW_GT_H_
 #define HW_GT_H_
 
-#include "hw_gt_core.h"
-
 #define GT
 #define HW_NAME					"GT"
+
+#include "hw_gt_core.h"
 
 #endif /* HW_GT_H_ */

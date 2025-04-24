@@ -29,7 +29,7 @@
 #define HW_HAS_NO_PHASE_SENSE //It has no phase voltage sensing. why. 
 #define HW_USE_INTERNAL_RC  
 #define PHASE_LP_CONSTANT   0.1 //LP for vd and vq being used to calculate valpha and vbeta.  
-#define HW_EXT_ADC_INVERTED //inverts external ADCs on the c interface, so packages read "correctly"
+#define HW_EXT_ADC_INVERTED //inverts external ADCs on the c interface, so packages read "correctly". could be done package side instead but.
 #define HW_HAS_INPUT_CURRENT_SENSOR //gt basically an axiom. 
 
 // Macros
@@ -249,6 +249,14 @@
 
 //Dead time override
 #define HW_DEAD_TIME_NSEC		360.0 //I should probably calculate this correctly. this is probably high.  
+
+//Default motor confs
+#ifdef GT
+#include "hw_gt_conf.h"
+#endif
+#ifdef GTS
+#include "hw_gts_conf.h"
+#endif
 
 // Setting limits
 //GT
