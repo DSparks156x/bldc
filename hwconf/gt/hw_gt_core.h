@@ -29,7 +29,7 @@
 #define HW_HAS_NO_PHASE_SENSE //It has no phase voltage sensing. why. 
 #define HW_USE_INTERNAL_RC  
 #define PHASE_LP_CONSTANT   0.1 //LP for vd and vq being used to calculate valpha and vbeta.  
-#define HW_EXT_ADC_INVERTED //inverts external ADCs on the c interface, so packages read "correctly". could be done package side instead but.
+#define HW_EXT_ADC_INVERTED //inverts external ADCs on the c interface, so packages read "correctly". could be done package side instead.
 #define HW_HAS_INPUT_CURRENT_SENSOR //gt basically an axiom. 
 
 // Macros
@@ -77,10 +77,10 @@
 #define V_REG					3.3
 #endif
 #ifndef VIN_R2
-#define VIN_R2					1.0
+#define VIN_R2					1.0 //easier to calculate. 
 #endif
 #ifndef CURRENT_SHUNT_RES
-#define CURRENT_SHUNT_RES		1
+#define CURRENT_SHUNT_RES		1 //hall effect shunt thingies. 
 #endif
 
 
@@ -282,8 +282,7 @@
 #endif
 
 //HW Functions
-float hw_gt_get_humidity(void);
-float hw_gt_get_temperature(void);
+void hw_gt_get_hdc(float* temp, float* humidity);
 float hw_gt_read_input_current(void);
 void hw_gt_get_input_current_offset(void);
 void hw_gt_start_input_current_sensor_offset_measurement(void);
