@@ -94,9 +94,10 @@
 #endif
 
 #ifndef IN_CURRENT_GAIN
-#define IN_CURRENT_GAIN         (-0.04*(2.0/3.0)) //0.04v/a * 2/3 divider
+#define IN_CURRENT_GAIN         (-0.04*(2.0/3.0)) //0.04v/a * 2/3 divider * inverted
 #endif
-#else //gt
+#endif
+#ifdef GT
 #ifndef VIN_R1
 #define VIN_R1					22.9045 // 20.05/0.861 = 23.2868 = (R1+R2) / R2 )
 #endif
@@ -106,7 +107,7 @@
 #endif
 
 #ifndef IN_CURRENT_GAIN
-#define IN_CURRENT_GAIN         (-0.04*(2.0/3.0)) //0.04v/a * 2/3 divider
+#define IN_CURRENT_GAIN         (-0.04*(2.0/3.0)) //0.04v/a * 2/3 divider * inverted
 #endif
 #endif
 
@@ -114,7 +115,7 @@
 // Input voltage
 #define GET_INPUT_VOLTAGE()		((V_REG / 4095.0) * (float)ADC_Value[ADC_IND_VIN_SENS] * ((VIN_R1 + VIN_R2) / VIN_R2))
 
-//Input current GT cool like this..... may better enforce battery amp limits so scary BMS doesnt cut. 
+//Input current GT cool like this.
 #define GET_INPUT_CURRENT()				hw_gt_read_input_current()
 #define GET_INPUT_CURRENT_OFFSET()		hw_gt_get_input_current_offset()
 #define MEASURE_INPUT_CURRENT_OFFSET()	hw_gt_start_input_current_sensor_offset_measurement()
@@ -137,15 +138,13 @@
 #define HW_ADC_EXT2_GPIO		GPIOC
 #define HW_ADC_EXT2_PIN			0
 
-
 // UART Peripheral - BMS RS485
 #define HW_UART_DEV				SD2
 #define HW_UART_GPIO_AF			GPIO_AF_USART2 //USART 2
 #define HW_UART_TX_PORT			GPIOA //PA2 
 #define HW_UART_TX_PIN			2
-#define HW_UART_RX_PORT			GPIOB //PA3
+#define HW_UART_RX_PORT			GPIOA //PA3
 #define HW_UART_RX_PIN			3
-
 
 // Permanent UART Peripheral - Bluetooth Module 
 #define HW_UART_P_BAUD		115200
@@ -156,7 +155,7 @@
 #define HW_UART_P_RX_PORT		GPIOD
 #define HW_UART_P_RX_PIN		9
 
-// ICU Peripheral for servo decoding
+// ICU Peripheral - Cool ass buzzer
 #define HW_USE_SERVO_TIM4
 #define HW_ICU_TIMER			TIM4
 #define HW_ICU_TIM_CLK_EN()		RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, ENABLE)
@@ -166,7 +165,7 @@
 #define HW_ICU_GPIO				GPIOC //passive buzzer. sounds like its dying without an actual tone signal. but its enough to know its booting/faintly alive. 
 #define HW_ICU_PIN				9
 
-// I2C Peripheral
+// I2C Peripheral - Humidity/Temp Sensor
 #define HW_USE_I2CD1
 #define HW_I2C_DEV				I2CD1
 #define HW_I2C_GPIO_AF			GPIO_AF_I2C1
@@ -235,7 +234,7 @@
 #define MCCONF_FOC_F_ZV					26000.0
 #endif
 #ifndef MCCONF_L_MAX_ABS_CURRENT
-#define MCCONF_L_MAX_ABS_CURRENT		150.0	// The maximum absolute current above which a fault is generated
+#define MCCONF_L_MAX_ABS_CURRENT		150.0	//Where were going we dont need ABS faults. Cant measure enough current to put abs max at a reasonable number so, no abs faults at all.
 #endif
 #ifndef MCCONF_L_IN_CURRENT_MAX
 #define MCCONF_L_IN_CURRENT_MAX         30
@@ -244,11 +243,11 @@
 #define MCCONF_L_IN_CURRENT_MIN         -30
 #endif
 #ifndef MCCONF_FOC_SAMPLE_V0_V7
-#define MCCONF_FOC_SAMPLE_V0_V7			false	// Run control loop in both v0 and v7 (requires phase shunts)
+#define MCCONF_FOC_SAMPLE_V0_V7			false	// May be worth trying. 
 #endif
 
 //Dead time override
-#define HW_DEAD_TIME_NSEC		360.0 //I should probably calculate this correctly. this is probably high.  
+#define HW_DEAD_TIME_NSEC		360.0 //I should probably calculate this correctly. but this seems fine. i think.
 
 //Default motor confs
 #ifdef GT
@@ -263,7 +262,7 @@
 #ifdef GT
 #define HW_LIM_CURRENT			-95.0, 95.0
 #define HW_LIM_CURRENT_IN		-32, 32.0
-#define HW_LIM_CURRENT_ABS		0.0, 150.0
+#define HW_LIM_CURRENT_ABS		0.0, 150.0 
 #define HW_LIM_VIN				14.0, 92.0
 #define HW_LIM_ERPM				-200e3, 200e3
 #define HW_LIM_DUTY_MIN			0.0, 0.1
@@ -279,10 +278,12 @@
 #define HW_LIM_ERPM				-200e3, 200e3
 #define HW_LIM_DUTY_MIN			0.0, 0.1
 #define HW_LIM_DUTY_MAX			0.0, 0.99
-#define HW_LIM_TEMP_FET			-40.0, 85.0 //setting this low. fet kaboom bad.
+#define HW_LIM_TEMP_FET			-40.0, 85.0 //setting this lowish. fet kaboom bad.
 #endif
 
 //HW Functions
+float hw_gt_get_humidity(void);
+float hw_gt_get_temperature(void);
 float hw_gt_read_input_current(void);
 void hw_gt_get_input_current_offset(void);
 void hw_gt_start_input_current_sensor_offset_measurement(void);

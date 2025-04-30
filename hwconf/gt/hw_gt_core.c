@@ -45,6 +45,8 @@ static const I2CConfig i2cfg = {
 //Functions
 static void terminal_cmd_gt_input_offset(int argc, const char **argv);
 
+static void terminal_cmd_gt_get_humidity(int argc, const char **argv);
+
 void buzzer_beep(void) {
     // External Buzzer (using servo pin!)
     palSetPadMode(HW_ICU_GPIO, HW_ICU_PIN,
@@ -107,9 +109,15 @@ void hw_init_gpio(void) {
 	//Terminal stuff
 	terminal_register_command_callback(
 		"gt_input_offset",
-		"Print gt input offset",
+		"Print GT input current sensor offset",
 		0,
 		terminal_cmd_gt_input_offset);
+
+	terminal_register_command_callback(
+		"gt_get_humidity",
+		"Print GT humidity sensor information",
+		0,
+		terminal_cmd_gt_get_humidity);
 
 }
 
@@ -236,6 +244,61 @@ void hw_try_restore_i2c(void) {
 	}
 }
 
+float hw_gt_get_humidity(void) {
+	float ret_value = 0.0;
+	//..... get humidity sensor information
+	uint8_t rxbuf[10];
+	uint8_t txbuf[10];
+	uint8_t ctxbuf[10];
+	systime_t tmo = MS2ST(5);
+	systime_t tmo2 = MS2ST(15);
+	i2caddr_t humidity_addr = 0x40;
+	ctxbuf[0] = 0x02;
+	ctxbuf[1] = 0;
+	ctxbuf[1] &= ~(1 << 4); //individual sensor
+	ctxbuf[1] &= ~( (1 << 1) | (1 << 0) ); //14 bit humidity
+	txbuf[0] = 0x01; //humidity register
+
+	i2cAcquireBus(&HW_I2C_DEV);
+	i2cMasterTransmitTimeout(&HW_I2C_DEV, humidity_addr, ctxbuf, 1, rxbuf, 0, tmo); //configure
+	chThdSleep(tmo2);
+	i2cMasterTransmitTimeout(&HW_I2C_DEV, humidity_addr, txbuf, 1, rxbuf, 0, tmo); //measure
+	chThdSleep(tmo2); //wait for measurement
+	i2cMasterTransmitTimeout(&HW_I2C_DEV, humidity_addr, txbuf, 1, rxbuf, 2, tmo); //read
+	i2cReleaseBus(&HW_I2C_DEV);
+	uint16_t raw_humidity = ((uint16_t)rxbuf[0] << 8) | rxbuf[1];
+	ret_value = ((float)raw_humidity / 65536.0f) * 100.0f;
+
+	return ret_value;
+}
+
+float hw_gt_get_temperature(void) {
+	float ret_value = 0.0;
+	//.... get humidity sensor temp information
+	uint8_t rxbuf[10];
+	uint8_t txbuf[10];
+	uint8_t ctxbuf[10];
+	systime_t tmo = MS2ST(5);
+	systime_t tmo2 = MS2ST(15);
+	i2caddr_t humidity_addr = 0x40;
+	ctxbuf[0] = 0x02;
+	ctxbuf[1] = 0;
+	ctxbuf[1] &= ~(1 << 4); //individual sensor
+	ctxbuf[1] &= ~(1 << 2); //14 bit temperature
+	txbuf[0] = 0x00; //temperature register
+
+	i2cAcquireBus(&HW_I2C_DEV);
+	i2cMasterTransmitTimeout(&HW_I2C_DEV, humidity_addr, ctxbuf, 1, rxbuf, 0, tmo); //configure
+	chThdSleep(tmo2);
+	i2cMasterTransmitTimeout(&HW_I2C_DEV, humidity_addr, txbuf, 1, rxbuf, 0, tmo); //measure
+	chThdSleep(tmo2); //wait for measurement
+	i2cMasterTransmitTimeout(&HW_I2C_DEV, humidity_addr, txbuf, 1, rxbuf, 2, tmo); //read
+	i2cReleaseBus(&HW_I2C_DEV);
+	uint16_t raw_temperature = ((uint16_t)rxbuf[0] << 8) | rxbuf[1];
+	ret_value = ((float)raw_temperature / 65536.0f) * 165.0f - 40.0f;
+	return ret_value;
+}
+
 float hw_gt_read_input_current(void) {
 	float ret_value = 0.0;
 	ret_value = ( (V_REG / 4095.0) * (float)ADC_Value[ADC_IND_INCURR] - input_current_sensor_offset ) / IN_CURRENT_GAIN;
@@ -273,5 +336,22 @@ static void terminal_cmd_gt_input_offset(int argc, const char **argv) {
 	commands_printf("GT input current offset is set as %.8f", (double)input_current_sensor_offset);
 
 	commands_printf(" ");
+	return;
+}
+
+static void terminal_cmd_gt_get_humidity(int argc, const char **argv) {
+	(void)argc;
+	(void)argv;
+	systime_t tmo = MS2ST(20);
+	float temp = 0;
+	float humidity = 0;
+	temp = hw_gt_get_temperature();
+	chThdSleep(tmo);
+	humidity = hw_gt_get_humidity();
+
+	commands_printf("Humidity is at %.1f%%", (double)humidity);
+	commands_printf(" ");
+	commands_printf("Temperature is at %.1f C", (double)temp);
+
 	return;
 }
