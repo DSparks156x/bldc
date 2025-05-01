@@ -85,14 +85,24 @@
 
 
 #ifdef GTS
-#ifndef VIN_R1
-#define VIN_R1					????? // 20.05/0.861 = 23.2868 = (R1+R2) / R2 )
-#endif
-
-#ifndef CURRENT_AMP_GAIN
-#define CURRENT_AMP_GAIN		(0.02*(2.0/3.0))  //0.02v/a * 2/3 divider
-#endif
-
+    #ifdef GTS150V //for extra spicy 150v capable GTS controllers.
+        #ifndef VIN_R1
+        #define VIN_R1					????? // 20.05/0.861 = 23.2868 = (R1+R2) / R2 )
+        #endif
+    #else
+        #ifndef VIN_R1
+        #define VIN_R1					????? // 20.05/0.861 = 23.2868 = (R1+R2) / R2 )
+        #endif
+    #endif
+    #ifdef  GTS150A //for extra spicy 150A measurement GTS controllers. 
+        #ifndef CURRENT_AMP_GAIN
+        #define CURRENT_AMP_GAIN		(0.01333*(2.0/3.0))  //0.02v/a * 2/3 divider
+        #endif
+    #else
+        #ifndef CURRENT_AMP_GAIN
+        #define CURRENT_AMP_GAIN		(0.02*(2.0/3.0))  //0.02v/a * 2/3 divider
+        #endif     
+    #endif
 #ifndef IN_CURRENT_GAIN
 #define IN_CURRENT_GAIN         (-0.04*(2.0/3.0)) //0.04v/a * 2/3 divider * inverted
 #endif
@@ -110,6 +120,7 @@
 #define IN_CURRENT_GAIN         (-0.04*(2.0/3.0)) //0.04v/a * 2/3 divider * inverted
 #endif
 #endif
+
 
 
 // Input voltage
@@ -139,12 +150,12 @@
 #define HW_ADC_EXT2_PIN			0
 
 // UART Peripheral - BMS RS485
-#define HW_UART_DEV				SD2
-#define HW_UART_GPIO_AF			GPIO_AF_USART2 //USART 2
-#define HW_UART_TX_PORT			GPIOA //PA2 
-#define HW_UART_TX_PIN			2
-#define HW_UART_RX_PORT			GPIOA //PA3
-#define HW_UART_RX_PIN			3
+#define HW_UART_DEV				SD1
+#define HW_UART_GPIO_AF			GPIO_AF_USART1 //USART 2
+#define HW_UART_TX_PORT			GPIOB //PA2 
+#define HW_UART_TX_PIN			6
+#define HW_UART_RX_PORT			GPIOB //PA3
+#define HW_UART_RX_PIN			7
 
 // Permanent UART Peripheral - Bluetooth Module 
 #define HW_UART_P_BAUD		115200

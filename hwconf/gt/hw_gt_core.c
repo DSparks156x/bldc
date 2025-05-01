@@ -247,19 +247,21 @@ void hw_try_restore_i2c(void) {
 void hw_gt_get_hdc(float* temp, float* humidity) {
 	//stuff
 	uint8_t rxbuf[4];
-	uint8_t ctxbuf[3];
+	uint8_t ctxbuf[3] = {0x02, 0x10, 0x00};
 	uint8_t txbuf[1];
+	uint8_t htxbuf[1];
 	systime_t tmo = MS2ST(5);
 	i2caddr_t humidity_addr = 0x40;
-	uint16_t conf = 0;
+	//uint16_t conf = 0;
 	
 	//conf
-	conf |= (1 << 12);
-	ctxbuf[0] = 0x02;
-	ctxbuf[1] = conf >> 8;
-	ctxbuf[2] = conf & 0xFF;
-	txbuf[0] = 0x0;
-
+	//conf |= (1 << 12);
+	//ctxbuf[0] = 0x02;
+	//ctxbuf[1] = 0x01;
+	//ctxbuf[2] = conf & 0xFF;
+	
+	txbuf[0] = 0x00;
+	htxbuf[0] = 0x01;
 
 	//configure the HDC
 	i2cAcquireBus(&HW_I2C_DEV);
@@ -269,11 +271,19 @@ void hw_gt_get_hdc(float* temp, float* humidity) {
 	i2cMasterTransmitTimeout(&HW_I2C_DEV, humidity_addr, txbuf, 1, 0, 0, tmo);
 	chThdSleepMilliseconds(100);
 	//read the measurements
-	i2cMasterTransmitTimeout(&HW_I2C_DEV, humidity_addr, 0, 0, rxbuf, 4, tmo);
+	
+	//i2cMasterTransmitTimeout(&HW_I2C_DEV, humidity_addr, 0, 0, rxbuf, 4, tmo);
+	
+	i2cMasterTransmitTimeout(&HW_I2C_DEV, humidity_addr, txbuf, 0, rxbuf, 2, tmo);
+	uint16_t raw_temp = (uint16_t)rxbuf[0] << 8 | (uint16_t)rxbuf[1];
+	chThdSleepMilliseconds(10);
+	i2cMasterTransmitTimeout(&HW_I2C_DEV, humidity_addr, htxbuf, 0, rxbuf, 2, tmo);
+	uint16_t raw_humidity = (uint16_t)rxbuf[0] << 8 | (uint16_t)rxbuf[1];
+	
 	i2cReleaseBus(&HW_I2C_DEV);
 	//math
-	uint16_t raw_temp = (uint16_t)rxbuf[0] << 8 | (uint16_t)rxbuf[1];
-	uint16_t raw_humidity = (uint16_t)rxbuf[2] << 8 | (uint16_t)rxbuf[3];
+	// uint16_t raw_temp = (uint16_t)rxbuf[0] << 8 | (uint16_t)rxbuf[1];
+	// uint16_t raw_humidity = (uint16_t)rxbuf[2] << 8 | (uint16_t)rxbuf[3];
 
 	*temp = (float)raw_temp / 65536.0 * 165.0 - 40.0;
 	*humidity = (float)raw_humidity / 65536.0 * 100.0;
