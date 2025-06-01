@@ -85,7 +85,7 @@
 #endif
 
 #ifndef MCCONF_L_MAX_VOLTAGE
-#define MCCONF_L_MAX_VOLTAGE        83 //this will never trigger.... this thing cant measure more than ~78.8, but thats too low for ov fault in a onewheel.
+#define MCCONF_L_MAX_VOLTAGE        83 //Cant measure above 78.8. Where were goin we don't need no silly "Overvoltage" Faults. 
 #endif
 #ifndef MCCONF_SI_BATTERY_CELLS
 #define MCCONF_SI_BATTERY_CELLS     18
