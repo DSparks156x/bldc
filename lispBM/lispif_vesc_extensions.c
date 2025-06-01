@@ -4445,6 +4445,8 @@ static lbm_value ext_conf_enc_sincos(lbm_value *args, lbm_uint argn) {
 		}
 	}
 
+	encoder_update_config(conf);
+
 	lbm_value res = ENC_SYM_NIL;
 	res = lbm_cons(lbm_enc_float(conf->m_encoder_sincos_phase_correction), res);
 	res = lbm_cons(lbm_enc_float(conf->m_encoder_sincos_filter_constant), res);
@@ -4884,7 +4886,7 @@ static volatile bool icu_width_done = false;
 static volatile bool icu_period_done = false;
 
 // Remote Messages
-#define RMSG_SLOT_NUM	5
+#define RMSG_SLOT_NUM	8
 
 typedef struct {
 	lbm_cid cid;
@@ -5793,11 +5795,11 @@ void lispif_process_rmsg(int slot, unsigned char *data, unsigned int len) {
 		f_lbm_array(&v, len, data);
 		lbm_finish_flatten(&v);
 
-		if (!lbm_unblock_ctx(rmsg_slots[slot].cid, &v)) {
+		if (lbm_unblock_ctx(rmsg_slots[slot].cid, &v)) {
+			rmsg_slots[slot].cid = -1;
+		} else {
 			lbm_free(v.buf);
 		}
-
-		rmsg_slots[slot].cid = -1;
 	}
 
 	chMtxUnlock(&rmsg_mutex);
