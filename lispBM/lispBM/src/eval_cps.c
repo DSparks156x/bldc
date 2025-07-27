@@ -106,7 +106,8 @@ static jmp_buf critical_error_jmp_buf;
 #define RECV_TO_RETRY              CONTINUATION(48)
 #define READ_START_ARRAY           CONTINUATION(49)
 #define READ_APPEND_ARRAY          CONTINUATION(50)
-#define NUM_CONTINUATIONS          51
+#define LOOP_ENV_PREP              CONTINUATION(51)
+#define NUM_CONTINUATIONS          52
 
 #define FM_NEED_GC       -1
 #define FM_NO_MATCH      -2
@@ -135,7 +136,12 @@ typedef enum {
 // Local variables used in sort and merge
 lbm_value symbol_x = ENC_SYM_NIL;
 lbm_value symbol_y = ENC_SYM_NIL;
+#ifdef CLEAN_UP_CLOSURES
+static lbm_value clean_cl_env_symbol = ENC_SYM_NIL;
+#endif
 
+// ////////////////////////////////////////////////////////////
+// Error strings
 const char* lbm_error_str_parse_eof = "End of parse stream.";
 const char* lbm_error_str_parse_dot = "Incorrect usage of '.'.";
 const char* lbm_error_str_parse_close = "Expected closing parenthesis.";
@@ -152,10 +158,25 @@ const char* lbm_error_str_variable_not_bound = "Variable not bound.";
 const char* lbm_error_str_read_no_mem = "Out of memory while reading.";
 const char* lbm_error_str_qq_expand = "Quasiquotation expansion error.";
 const char* lbm_error_str_not_applicable = "Value is not applicable.";
+const char* lbm_error_str_built_in = "Cannot redefine built-in.";
 
 static lbm_value lbm_error_suspect;
 static bool lbm_error_has_suspect = false;
-#ifdef LBM_ALWAYS_GC
+
+
+// ////////////////////////////////////////////////////////////
+// Prototypes for locally used functions (static)
+static uint32_t lbm_mailbox_free_space_for_cid(lbm_cid cid);
+static void apply_apply(lbm_value *args, lbm_uint nargs, eval_context_t *ctx);
+static int gc(void);
+#ifdef LBM_USE_ERROR_LINENO
+static void error_ctx(lbm_value, int line_no);
+static void error_at_ctx(lbm_value err_val, lbm_value at, int line_no);
+#else
+static void error_ctx(lbm_value);
+static void error_at_ctx(lbm_value err_val, lbm_value at);
+#endif
+static void mailbox_add_mail(eval_context_t *ctx, lbm_value mail);
 
 // TODO: Optimize, In a large number of cases
 // where WITH_GC is used, it is not really required to check is_symbol_merror.
@@ -163,7 +184,7 @@ static bool lbm_error_has_suspect = false;
 // Given the number of calls to WITH_GC this could save some code
 // space and potentially also be a slight speedup.
 // TODO: profile.
-
+#ifdef LBM_ALWAYS_GC
 #define WITH_GC(y, x)                           \
   gc();                                         \
   (y) = (x);                                    \
@@ -205,27 +226,20 @@ static bool lbm_error_has_suspect = false;
 
 #endif
 
-/**************************************************************/
-/* */
+// ////////////////////////////////////////////////////////////
+// Context queues
 typedef struct {
   eval_context_t *first;
   eval_context_t *last;
 } eval_context_queue_t;
 
-#ifdef CLEAN_UP_CLOSURES
-static lbm_value clean_cl_env_symbol = ENC_SYM_NIL;
-#endif
+static eval_context_queue_t blocked  = {NULL, NULL};
+static eval_context_queue_t queue    = {NULL, NULL};
 
-static int gc(void);
-#ifdef LBM_USE_ERROR_LINENO
-static void error_ctx(lbm_value, int line_no);
-static void error_at_ctx(lbm_value err_val, lbm_value at, int line_no);
-#else
-static void error_ctx(lbm_value);
-static void error_at_ctx(lbm_value err_val, lbm_value at);
-#endif
+mutex_t qmutex;
+bool    qmutex_initialized = false;
+
 static void enqueue_ctx(eval_context_queue_t *q, eval_context_t *ctx);
-static void mailbox_add_mail(eval_context_t *ctx, lbm_value mail);
 
 // The currently executing context.
 eval_context_t *ctx_running = NULL;
@@ -358,6 +372,18 @@ static mutex_t      lbm_events_mutex;
 static bool         lbm_events_mutex_initialized = false;
 static volatile lbm_cid  lbm_event_handler_pid = -1;
 
+static unsigned int lbm_event_queue_item_count(void) {
+  unsigned int res = lbm_events_max;
+  if (!lbm_events_full) {
+    if (lbm_events_head >= lbm_events_tail) {
+      res = lbm_events_head - lbm_events_tail;
+    } else {
+      res = lbm_events_max - lbm_events_tail + lbm_events_head;
+    }
+  }
+  return res;
+}
+
 lbm_cid lbm_get_event_handler_pid(void) {
   return lbm_event_handler_pid;
 }
@@ -405,6 +431,9 @@ bool lbm_event_unboxed(lbm_value unboxed) {
       t == LBM_TYPE_U ||
       t == LBM_TYPE_CHAR) {
     if (lbm_event_handler_pid > 0) {
+      if (lbm_mailbox_free_space_for_cid(lbm_event_handler_pid) <= lbm_event_queue_item_count()) {
+        return false;
+      }
       return event_internal(LBM_EVENT_FOR_HANDLER, 0, (lbm_uint)unboxed, 0);
     }
   }
@@ -413,6 +442,9 @@ bool lbm_event_unboxed(lbm_value unboxed) {
 
 bool lbm_event(lbm_flat_value_t *fv) {
   if (lbm_event_handler_pid > 0) {
+    if (lbm_mailbox_free_space_for_cid(lbm_event_handler_pid) <= lbm_event_queue_item_count()) {
+      return false;
+    }
     return event_internal(LBM_EVENT_FOR_HANDLER, 0, (lbm_uint)fv->buf, fv->buf_size);
   }
   return false;
@@ -449,15 +481,6 @@ static lbm_uint          blocking_extension_timeout_us = 0;
 static bool              blocking_extension_timeout = false;
 
 static bool              is_atomic = false;
-
-/* Process queues */
-static eval_context_queue_t blocked  = {NULL, NULL};
-static eval_context_queue_t queue    = {NULL, NULL};
-
-/* one mutex for all queue operations */
-mutex_t qmutex;
-bool    qmutex_initialized = false;
-
 
 // MODES
 static volatile bool lbm_verbose = false;
@@ -1047,14 +1070,15 @@ static void finish_ctx(void) {
   if (!ctx_running) {
     return;
   }
+  if (ctx_running->id == lbm_event_handler_pid) {
+    lbm_event_handler_pid = -1;
+  }
   /* Drop the continuation stack immediately to free up lbm_memory */
   lbm_stack_free(&ctx_running->K);
   ctx_done_callback(ctx_running);
 
   lbm_free(ctx_running->name); //free name if in LBM_MEM
-  // It's technically a bit iffy to cast away the const attribute, but we only
-  // treat the string as non-const if it came from LBM_MEM (by eventually
-  // freeing it), in which case it's definitely not actually const.
+
   lbm_memory_free((lbm_uint*)ctx_running->error_reason); //free error_reason if in LBM_MEM
 
   lbm_memory_free((lbm_uint*)ctx_running->mailbox);
@@ -1547,6 +1571,38 @@ void lbm_undo_block_ctx_from_extension(void) {
   mutex_unlock(&blocking_extension_mutex);
 }
 
+// TODO: very similar iteration patterns.
+//       Try to break out common part from free_space and from find_and_send
+/** mailbox_free_space_for_cid is used to get the available
+ * space in a given context's mailbox.
+ */
+static uint32_t lbm_mailbox_free_space_for_cid(lbm_cid cid) {
+  eval_context_t *found = NULL;
+  uint32_t res = 0;
+
+  mutex_lock(&qmutex);
+
+  found = lookup_ctx_nm(&blocked, cid);
+  if (!found) {
+    found = lookup_ctx_nm(&queue, cid);
+  }
+  if (!found && ctx_running && ctx_running->id == cid) {
+    found = ctx_running;
+  }
+
+  if (found) {
+    res = found->mailbox_size - found->num_mail;
+  }
+
+  mutex_unlock(&qmutex);
+
+  return res;
+}
+
+/** find_receiver_and_send is used for message passing where
+ * the semantics is that the oldest message is dropped if the
+ * receiver mailbox is full.
+ */
 bool lbm_find_receiver_and_send(lbm_cid cid, lbm_value msg) {
   mutex_lock(&qmutex);
   eval_context_t *found = NULL;
@@ -1896,6 +1952,8 @@ static void eval_define(eval_context_t *ctx) {
       }
       ctx->curr_exp = parts[VAL];
       return;
+    } else {
+      lbm_set_error_reason((char*)lbm_error_str_built_in);
     }
   }
   ERROR_AT_CTX(ENC_SYM_EERROR, ctx->curr_exp);
@@ -2164,11 +2222,12 @@ static void eval_loop(eval_context_t *ctx) {
   lbm_value env              = ctx->curr_env;
   lbm_value parts[3];
   extract_n(get_cdr(ctx->curr_exp), parts, 3);
-  lbm_value *sptr = stack_reserve(ctx, 3);
+  lbm_value *sptr = stack_reserve(ctx, 4);
   sptr[0] = parts[LOOP_BODY];
   sptr[1] = parts[LOOP_COND];
-  sptr[2] = LOOP_CONDITION;
-  let_bind_values_eval(parts[LOOP_BINDS], parts[LOOP_COND], env, ctx);
+  sptr[2] = ENC_SYM_NIL;
+  sptr[3] = LOOP_ENV_PREP;
+  let_bind_values_eval(parts[LOOP_BINDS], ENC_SYM_NIL, env, ctx);
 }
 
 /* (trap expression)
@@ -3285,8 +3344,6 @@ static void apply_rotate(lbm_value *args, lbm_uint nargs, eval_context_t *ctx) {
   ERROR_CTX(ENC_SYM_EERROR);
 }
 
-static void apply_apply(lbm_value *args, lbm_uint nargs, eval_context_t *ctx);
-
 /***************************************************/
 /* Application lookup table                        */
 
@@ -3528,20 +3585,27 @@ static void cont_or(eval_context_t *ctx) {
   }
 }
 
-static int fill_binding_location(lbm_value key, lbm_value value, lbm_value env) {
+static void fill_binding_location(lbm_value key, lbm_value value, lbm_value env) {
   if (lbm_type_of(key) == LBM_TYPE_SYMBOL) {
-    if (key == ENC_SYM_DONTCARE) return FB_OK;
-    lbm_env_modify_binding(env,key,value);
-    return FB_OK;
+    // NILs dual role makes it hard to detect the difference
+    // between the end of a structural key or an attempt to use NIL as the key
+    // or as part of big key.
+    // NIL has been given the same role as dont care.
+    if (lbm_dec_sym(key) >= RUNTIME_SYMBOLS_START) {
+      lbm_env_modify_binding(env,key,value);
+    } else {
+      if (key == ENC_SYM_DONTCARE || key == ENC_SYM_NIL) return;
+      lbm_set_error_reason((char*)lbm_error_str_built_in);
+      ERROR_AT_CTX(ENC_SYM_EERROR, key);
+    }
   } else if (lbm_is_cons(key) &&
              lbm_is_cons(value)) {
-    int r = fill_binding_location(get_car(key), get_car(value), env);
-    if (r == FB_OK) {
-      r = fill_binding_location(get_cdr(key), get_cdr(value), env);
-    }
-    return r;
+    fill_binding_location(get_car(key), get_car(value), env);
+    fill_binding_location(get_cdr(key), get_cdr(value), env);
+  } else {
+    lbm_set_error_reason("Incorrect type of key in binding");
+    ERROR_AT_CTX(ENC_SYM_TERROR, key);
   }
-  return FB_TYPE_ERROR;
 }
 
 static void cont_bind_to_key_rest(eval_context_t *ctx) {
@@ -3552,10 +3616,7 @@ static void cont_bind_to_key_rest(eval_context_t *ctx) {
   lbm_value env  = sptr[2];
   lbm_value key  = sptr[3];
 
-  if (fill_binding_location(key, ctx->r, env) < 0) {
-    lbm_set_error_reason("Incorrect type of name/key in let-binding");
-    ERROR_AT_CTX(ENC_SYM_TERROR, key);
-  }
+  fill_binding_location(key, ctx->r, env);
 
   if (lbm_is_cons(rest)) {
     lbm_value car_rest = get_car(rest);
@@ -3711,22 +3772,31 @@ static void cont_terminate(eval_context_t *ctx) {
 }
 
 static void cont_loop(eval_context_t *ctx) {
-  lbm_value *sptr = get_stack_ptr(ctx, 2);
+  lbm_value *sptr = get_stack_ptr(ctx, 3);
   stack_reserve(ctx,1)[0] = LOOP_CONDITION;
+  ctx->curr_env = sptr[2];
   ctx->curr_exp = sptr[1];
 }
 
 static void cont_loop_condition(eval_context_t *ctx) {
   if (lbm_is_symbol_nil(ctx->r)) {
-    lbm_stack_drop(&ctx->K, 2);
+    lbm_stack_drop(&ctx->K, 3);
     ctx->app_cont = true;  // A loop returns nil? Makes sense to me... but in general?
     return;
   }
-  lbm_value *sptr = get_stack_ptr(ctx, 2);
+  lbm_value *sptr = get_stack_ptr(ctx, 3);
   stack_reserve(ctx,1)[0] = LOOP;
+  ctx->curr_env = sptr[2];
   ctx->curr_exp = sptr[0];
 }
 
+static void cont_loop_env_prep(eval_context_t *ctx) {
+  lbm_value *sptr = get_stack_ptr(ctx, 3);
+  sptr[2] = ctx->curr_env;
+  stack_reserve(ctx,1)[0] = LOOP_CONDITION;
+  ctx->curr_exp = sptr[1];
+}
+ 
 static void cont_merge_rest(eval_context_t *ctx) {
   lbm_uint *sptr = get_stack_ptr(ctx, 9);
 
@@ -4817,11 +4887,8 @@ static void cont_progn_var(eval_context_t* ctx) {
   lbm_value env;
 
   lbm_pop_2(&ctx->K, &key, &env);
+  fill_binding_location(key, ctx->r, env);
 
-  if (fill_binding_location(key, ctx->r, env) < 0) {
-    lbm_set_error_reason("Incorrect type of name/key in let-binding");
-    ERROR_AT_CTX(ENC_SYM_TERROR, key);
-  }
   ctx->curr_env = env; // evaluating value may build upon local env.
   ctx->app_cont = true;
 }
@@ -5416,6 +5483,7 @@ static const cont_fun continuations[NUM_CONTINUATIONS] =
     cont_recv_to_retry,
     cont_read_start_array,
     cont_read_append_array,
+    cont_loop_env_prep,
   };
 
 /*********************************************************/
@@ -5710,6 +5778,10 @@ static lbm_value get_event_value(lbm_event_t *e) {
   return v;
 }
 
+// In a scenario where C is enqueuing events and other LBM threads
+// are sendind mail to event handler concurrently, old events will
+// be dropped as the backpressure mechanism wont detect this scenario.
+// TODO: Low prio pondering on robust solutions.
 static void process_events(void) {
 
   if (!lbm_events) {
@@ -5728,6 +5800,9 @@ static void process_events(void) {
       break;
     case LBM_EVENT_FOR_HANDLER:
       if (lbm_event_handler_pid >= 0) {
+        //If multiple events for handler, this is wasteful!
+        // TODO: Find the event_handler once and send all mails.
+        // However, do it with as little new code as possible.
         lbm_find_receiver_and_send(lbm_event_handler_pid, event_val);
       }
       break;
@@ -5737,7 +5812,6 @@ static void process_events(void) {
     }
   }
 }
-
 
 void lbm_add_eval_symbols(void) {
   lbm_uint x = 0;
@@ -5808,9 +5882,14 @@ void lbm_run_eval(void){
     }
     while (true) {
 #ifdef LBM_USE_TIME_QUOTA
-
-      // use a fast implementation of timestamp where possible.
-      if (timestamp_us_callback() < eval_current_quota && ctx_running) {
+      // Is "negative" (closer to max value) when the quota timestamp is "ahead
+      // of" the current timestamp. It handles the quota being very large while
+      // the current timestamp has overflowed back to being small, giving a
+      // "positive" (closer to min value) result, meaning the context will be
+      // switched.
+      uint32_t unsigned_difference = timestamp_us_callback() - eval_current_quota;
+      bool is_negative = unsigned_difference & (1u << 31); 
+      if (is_negative && ctx_running) {
         evaluation_step();
       } else {
         if (eval_cps_state_changed) break;

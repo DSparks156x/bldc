@@ -873,22 +873,6 @@ Hold shutdown. When hold is true hardware shutdown will be delayed until hold is
 
 ---
 
-#### const-heap-erase
-
-| Platforms | Firmware |
-|---|---|
-| ESC | 6.06+ |
-
-```clj
-(const-heap-erase)
-```
-
-Erase constant heap. This can be used in the beginning of the application to erase the constant memory of the application. That is useful for applications that do not always write the same things to constant memory in the same order after starting. Situations where that can occur is when the application takes different execution paths depending on external events or when writing variables to constant memory that differ based on external events.
-
-Running this command in the beginning of the application should prevent any write-to-flash errors, but the command takes a few seconds to execute and puts some wear on the flash memory. The reader will become slightly slower in const blocks after running this command compared to an application where constant memory already has been written in previous runs.
-
----
-
 #### reboot
 
 | Platforms | Firmware |
@@ -1244,6 +1228,20 @@ Run FOC in open loop. Useful to test thermal properties of motors and power stag
 ```
 
 Run FOC in open loop in phase mode. Phase is the electrical position of the openloop-vector in degrees, range 0.0 to 360.0.
+
+---
+
+#### set-kill-sw
+
+| Platforms | Firmware |
+|---|---|
+| ESC | 6.06+ |
+
+```clj
+(set-kill-sw state)
+```
+
+Set kill switch state. When state is set to 1 the motor is disabled and optionally braking if timeout_brake_current is greater than 0. The kill switch overrides all other inputs and can be used as an emergency stop. The kill switch state here is applied as logic OR with the app settings kill switch input, so as long as any of them is active the motor will be disabled.
 
 ---
 
@@ -3304,7 +3302,7 @@ Stop IMU-driver and put IMU in sleep mode.
 
 ### GPIO
 
-These functions allow using GPIO-pins from lispBM. The UART and SWD pins can currently be used. NOTE: If you are using the SWD-pins a SWD-programmer won't work after that until the next reset. If you are using the hall sensor pins make sure that sensor port mode is not set to anything that will communicate with encoders using those pins. Leaving the sensor port in hall sensor mode should be fine.
+These functions allow using GPIO-pins from lispBM. NOTE: If you are using the SWD-pins a SWD-programmer won't work after that until the next reset. If you are using the hall sensor pins make sure that sensor port mode is not set to anything that will communicate with encoders using those pins. Leaving the sensor port in hall sensor mode should be fine.
 
 The gpio-extension are also available on the express-platform. There the pins are a number (e.g. 1, 2) instead of a symbol.
 
@@ -3335,6 +3333,8 @@ Configure GPIO pin to mode. Example:
 'pin-hall3  ; Sensor port hall3
 'pin-adc1   ; ADC1-pin on COMM-port
 'pin-adc2   ; ADC2-pin on COMM-port
+'pin-adc3   ; ADC3-pin on COMM-port (if available)
+'pin-adc4   ; ADC4-pin on COMM-port (if available)
 'pin-ppm    ; Signal-pin on PPM-port
 
 ; On express the pins are a number and not a symbol.
@@ -3670,9 +3670,15 @@ The following selection of app and motor parameters can be read and set from Lis
                         ;    6: FOC_SENSOR_MODE_HFI_V3
                         ;    7: FOC_SENSOR_MODE_HFI_V4
                         ;    8: FOC_SENSOR_MODE_HFI_V5
+'foc-encoder-offset     ; Encoder zero and motor zero offset (FW 6.06+)
+'foc-encoder-inverted   ; Encoder vs motor direction inverted (FW 6.06+)
+'foc-encoder-ratio      ; Ratio between electrical and encoder turns (FW 6.06+)
 'm-ntc-motor-beta       ; Beta Value for Motor Thermistor
-'m_encoder_counts       ; ABI encoder counts (FW 6.06)
-'m_sensor_port_mode     ; Sensor port mode (FW 6.06)
+'m-ptc-motor-coeff      ; Coefficient for PTC Motor Thermistor. Unit: %/K (FW 6.06+)
+'m-ntcx-ptcx-temp-base  ; Resistance of custom NTC/PTC resistor. (FW 6.06+)
+'m-ntcx-ptcx-res        ; Base temperature of custom NTC/PTC resistor. (FW 6.06+)
+'m-encoder-counts       ; ABI encoder counts (FW 6.06)
+'m-sensor-port-mode     ; Sensor port mode (FW 6.06)
                         ;    0: SENSOR_PORT_MODE_HALL
                         ;    1: SENSOR_PORT_MODE_ABI
                         ;    2: SENSOR_PORT_MODE_AS5047_SPI
@@ -3701,10 +3707,22 @@ The following selection of app and motor parameters can be read and set from Lis
 'foc-motor-r            ; Motor resistance in milliOhm
 'foc-motor-flux-linkage ; Motor flux linkage in milliWeber
 'foc-observer-gain      ; Observer gain x1M
+'foc-observer-type      ; Observer type (FW 6.06)
+                        ;    0 : FOC_OBSERVER_ORTEGA_ORIGINAL
+                        ;    1 : FOC_OBSERVER_MXLEMMING
+                        ;    2 : FOC_OBSERVER_ORTEGA_LAMBDA_COMP
+                        ;    3 : FOC_OBSERVER_MXLEMMING_LAMBDA_COMP
+                        ;    4 : FOC_OBSERVER_MXV
+                        ;    5 : FOC_OBSERVER_MXV_LAMBDA_COMP
+                        ;    6 : FOC_OBSERVER_MXV_LAMBDA_COMP
+'foc-mtpa-mode          ; Maximum Torque per Amp (MTPA) Mode (FW 6.06)
+                        ;    0 : MTPA_MODE_OFF
+                        ;    1 : MTPA_MODE_IQ_TARGET
+                        ;    2 : MTPA_MODE_IQ_MEASURED
 'foc-hfi-amb-mode       ; HFI Ambiguity Resolve Mode (FW 6.06)
-                        ; 0 : Six Vector
-                        ; 1 : ID Single Pulse
-                        ; 2 : ID Double Pulse
+                        ;    0 : Six Vector
+                        ;    1 : ID Single Pulse
+                        ;    2 : ID Double Pulse
 'foc-hfi-amb-current    ; HFI Ambiguity Resolve Current (FW 6.06)
 'foc-hfi-amb-tres       ; HFI Ambiguity Resolve Threshold (FW 6.06)
 'foc-hfi-voltage-start  ; HFI start voltage (V) (for resolving ambiguity)
@@ -3736,6 +3754,7 @@ The following selection of app and motor parameters can be read and set from Lis
 'foc-fw-current-max     ; Maximum field weakening current (Added in FW 6.05)
 'foc-fw-duty-start      ; Duty where field weakening starts (Added in FW 6.05)
 'foc-short-ls-on-zero-duty ; Short low-side FETs on 0 duty (Added in FW 6.05)
+'foc-overmod-factor     ; FOC overmodulation factor (Added in FW 6.06)
 'min-speed              ; Minimum speed in meters per second (a negative value)
 'max-speed              ; Maximum speed in meters per second
 'app-to-use             ; App to use
@@ -4107,6 +4126,55 @@ Get all overridden current limits from speed, temperature, voltage, wattage etc.
 
 ```clj
 (motor-min motor-max input-min input-max)
+```
+
+---
+
+#### conf-detect-lambda-enc
+
+| Platforms | Firmware |
+|---|---|
+| ESC | 6.06+ |
+
+```clj
+(conf-detect-lambda-enc current duty erpm-per-sec resistance-mOhm inductance-uH)
+```
+
+Detect flux linkage as well as encoder parameters if an encoder is configured. The parameters are
+
+| Parameter | Description |
+|---|---|
+| current | Current to spin up the motor with. |
+| duty | Duty cycle to stop at. |
+| erpm-per-sec | Angular rate to spin up at in ERPM per second. |
+| resistance-mOhm | Motor resistance in milliohm. Has to be measured before. |
+| inductance-uH | Motor inductance in microhenry. Has to be measured before. |
+
+If the detection fails nil is returned. If a fault occurs during the detection the fault code is returned. Otherwise, the following list with the result is returned:
+
+```clj
+(flux-linkage flux-linkage-undriven undriven-samples enc-offset enc-ratio enc-inverted)
+```
+
+Where the result values are
+
+| Value | Description |
+|---|---|
+| flux-linkage | Flux linkage estimate´ in Wb while the motor is driven. |
+| flux-linkage-undriven | Undriven flux linkage in Wb. **This is the better estimate that you want to use.** |
+| undriven-samples | Samples for the undriven flux linkage measurement. Should be at least 500 or so for an accurate measurement. |
+| enc-offset | Encoder offset in degrees. -1 if the measurement fauiled. |
+| enc-ratio | Encoder ratio. -1 if the measurement failed. |
+| enc-inverted | Encoder is inverted. |
+
+Example:
+
+```clj
+(print (conf-detect-lambda-enc 40 0.3 1500 7 70))
+-> (0.017543f32 0.018353f32 2000.000000f32 6.898595f32 4.000000f32 1)
+
+; Use result of resistance and inductance measurement
+(print (conf-detect-lambda-enc 40 0.3 1500 (conf-measure-res 30) (first (conf-measure-ind 20))))
 ```
 
 ---
@@ -5171,6 +5239,7 @@ Possible events to register are
 (event-enable 'event-can-sid)  ; -> (event-can-sid . (id . data)), where id is U32 and data is a byte array
 (event-enable 'event-can-eid)  ; -> (event-can-eid . (id . data)), where id is U32 and data is a byte array
 (event-enable 'event-data-rx)  ; -> (event-data-rx . data), where data is a byte array
+(event-enable 'event-cmds-data-tx)  ; -> (event-cmds-data-tx data), where data is a byte array
 
 ; ESC Only
 (event-enable 'event-shutdown) ; -> event-shutdown
@@ -5200,6 +5269,9 @@ This event is sent when extended id CAN-frames are received.
 
 **event-data-rx**  
 This event is sent when custom app data is sent from VESC Tool or other connected devices. This works using all communication ports including USB, UART and CAN-bus.
+
+**event-cmds-data-tx**  
+This event is sent when the commands interface has a response packet to send. See the commands chapter for more details.
 
 **event-shutdown**  
 This event is sent when the ESC is about to shut down. Note that this event currently only works on hardware with a power switch. If that is not the case you could try to, for example, monitor the input voltage and simulate this event when it drops below a set level.
@@ -6235,6 +6307,132 @@ The optional arguments optUartNum, optPinRx and optPinTx can be used to specify 
 
 ---
 
+#### nmea-parse
+
+| Platforms | Firmware |
+|---|---|
+| Express | 6.06+ |
+
+```clj
+(nmea-parse str)
+```
+
+Parse NMEA string and updates GNSS state. Supported strings are GGA, GPGSV, GLGSV and RMC. Other strings are ignored. Returns true when something was parsed, nil otherwise.
+
+All of the GNSS-extensions as well as the logging can take advantage of these updates. CAN-messages for GNSS position and time will also be sent out based on the updates.
+
+---
+
+#### set-pos-time
+
+| Platforms | Firmware |
+|---|---|
+| Express | 6.06+ |
+
+```clj
+(set-pos-time lat lon height speed hdop msToday year month day)
+```
+Update position, date and time state. All arguments are optional and nil can be passed for arguments that should not be updated.
+
+The arguments are interpreted as follows:
+
+| Name | Value |
+|---|---|
+| lat | Latitude in degrees |
+| lon | Longitude in degrees |
+| height | Altitude in meters |
+| speed | Ground speed in meters per second |
+| hdop | hdop-value of position |
+| msToday | Time today in milliseconds |
+| year | Year |
+| month | Month |
+| day | day |
+
+All of the GNSS-extensions as well as the logging can take advantage of these updates. CAN-messages for GNSS position and time will also be sent out based on the updates.
+
+Examples
+
+```clj
+(var hh 10)
+(var mm 25)
+(var ss 10)
+(var ms-today (+
+	(* hh 60 60 1000)
+	(* mm 60 1000)
+	(* ss 1000)
+))
+
+; Set time and data only
+(set-pos-time nil nil nil nil nil ms-today 2025 02 02)
+
+
+; Set position only
+(set-pos-time 57.623761 13.091890 10 0.0 2)
+```
+
+---
+
+## Commands
+
+The VESC commands interface can be accessed from LispBM. This can be used to execute all commands supported by VESC Tool or to create a bridge to VESC Tool.
+
+---
+
+#### cmds-start-stop
+
+| Platforms | Firmware |
+|---|---|
+| ESC, Express | 6.06+ |
+
+```clj
+(cmds-start-stop optStart)
+```
+
+Start or stop commands interface. The commands interface needs to be started for the extensions and related events to work. This will allocate around 4k (Express) or 3k (ESC) of memory for the packet interface and for the commands processing thread stack. When stopping the allocated memory will be freed. The optional argument optStart can be set to true for start or to false for stop. If it is left out the commands interface will be started.
+
+---
+
+#### cmds-proc
+
+| Platforms | Firmware |
+|---|---|
+| ESC, Express | 6.06+ |
+
+```clj
+(cmds-proc data)
+```
+
+Process data byte array with the packet decoder. If a full command is decoded a C thread will be spawned that executes the command. If the command has a response to send this is done using the event-cmds-data-tx event.
+
+The best way to illustrate how to use this is with an example. The following code uses TCP sockets on VESC Express to connect to the VESC TCP hub. VESC Tool can then connect to this express using the TCP Hub and run all commands as usual. It should be fairly simple to adapt this example to for example interface with an LTE modem.
+
+```clj
+; Connect to VESC TCP hub
+(def socket (tcp-connect "veschub.vedder.se" 65101))
+
+; Register with username user11 and password pass11
+(tcp-send socket "VESC:user11:pass11\n")
+
+(defun event-handler () {
+        (set-mailbox-size 3)
+        (loopwhile t
+            (recv
+                ((event-cmds-data-tx (? data)) (tcp-send socket data))
+                (_ nil)
+        ))
+})
+
+(event-register-handler (spawn event-handler))
+(event-enable 'event-cmds-data-tx)
+
+(cmds-start-stop true)
+(loopwhile t {
+        (cmds-proc (tcp-recv socket 512 100 false))
+})
+```
+
+---
+
 ## ESP-NOW
 
 The VESC Express has full support for ESP-NOW. It can be used in any combination of bluetooth and wifi, the only limitation is that it must use the same channel as the wifi. That is mainly an issue in station mode as there is no way to control the channel that the access point the express connects to uses.
@@ -6551,7 +6749,20 @@ Disconnect SD-card or NAND-Flash.
 (f-open path mode)
 ```
 
-Open a file in open-mode mode (r, w or rw). Returns a number that can be used as a handle to the file on success or nil if the file could not be opened. Example:
+Open a file in open-mode mode (r, w, a, r+, w+ and a+). Returns a number that can be used as a handle to the file on success or nil if the file could not be opened.
+
+The modes mean the following
+
+| Mode | Description |
+|---|---|
+| r | Open for reading. The file must exist. |
+| w | Open for writing. Creates an empty file or truncates an existing file. |
+| a | Open for appending. Writes data at the end of the file. Creates the file if it does not exist. |
+| r+ | Open for reading and writing. The file must exist. |
+| w+ | Open for reading and writing. Creates an empty file or truncates an existing file. |
+| a+ | Open for reading and appending. The file is created if it does not exist. |
+
+Example:
 
 ```clj
 (def f (f-open "test.txt" "w")) ; Open test.txt in write-only mode and store the handle as f.

@@ -422,11 +422,11 @@ void bms_update_limits(float *i_in_min, float *i_in_max,
 	float i_in_max_bms_vmin = i_in_max_conf;
 	if ((m_conf.limit_mode >> 2) & 1) {
 		if (m_stat_vcell_min.id >= 0) {
-			float vmin = m_stat_vcell_min.soc;
+			float vmin = m_stat_vcell_min.v_cell_min;
 
-			if (vmin > (m_conf.vmin_limit_start - 0.1)) {
+			if (vmin > (m_conf.vmin_limit_start - 0.001)) {
 				// OK
-			} else if (vmin < (m_conf.vmin_limit_end + 0.1)) {
+			} else if (vmin < (m_conf.vmin_limit_end + 0.001)) {
 				i_in_max_bms_vmin = 0.0;
 			} else {
 				i_in_max_bms_vmin = utils_map(vmin, m_conf.vmin_limit_start,
@@ -439,11 +439,11 @@ void bms_update_limits(float *i_in_min, float *i_in_max,
 	float i_in_min_bms_vmax = i_in_min_conf;
 	if ((m_conf.limit_mode >> 3) & 1) {
 		if (m_stat_vcell_max.id >= 0) {
-			float vmax = m_stat_vcell_max.soc;
+			float vmax = m_stat_vcell_max.v_cell_max;
 
-			if (vmax < (m_conf.vmax_limit_start + 0.1)) {
+			if (vmax < (m_conf.vmax_limit_start + 0.001)) {
 				// OK
-			} else if (vmax > (m_conf.vmax_limit_end - 0.1)) {
+			} else if (vmax > (m_conf.vmax_limit_end - 0.001)) {
 				i_in_min_bms_vmax = 0.0;
 			} else {
 				i_in_min_bms_vmax = utils_map(vmax, m_conf.vmax_limit_start,

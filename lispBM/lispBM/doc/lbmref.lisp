@@ -167,12 +167,14 @@
                         "a qualifier string.  The qualifiers available in LBM are: `b`, `i`,"
                         "`u`, `i32`, `u32`, `i64`, `u64`, `f32` and `f63`.  The `i` and `f32`"
                         "qualifiers are never strictly needed but can be added if one so"
-                        "wishes."
+                        "wishes. An alternative way of writing byte literals is using"
+                        "[Character literals](#character-literals) (e.g. `\\#a`)."
                         ))
             (para (list "So for example:"
                         ))
             (bullet '("`1b`     - Specifies a byte typed value of 1"
                       "`1.0f64` - Specifies a 64bit float with value 1.0."
+                      "`\\#a`   - Specifies a byte type value of 97."
                       ))
             (para (list "**Note** that it is an absolute requirement to include a decimal when"
                         "writing a floating point literal in LBM."
@@ -218,6 +220,64 @@
             ))
   )
 
+(defun ch-strings ()
+  (section 2 "Strings"
+           (list
+            (para (list "LBM supports string literals, consisting of a pair of double quotes (`\"`)"
+                        "with a string of characters in between. These evaluate to a byte array"
+                        "containing the bytes of these characters (in the source code's encoding),"
+                        "followed by a zero byte."
+                        ))
+            (para (list "Special characters can be written using escape sequences. They take the"
+                        "form of a backslash character (`\\`) followed by some character from the"
+                        "list below and are replaced with their corresponding character at read"
+                        "time. A backslash followed by any other character is a read error."
+                        ))
+            (table '("Escape sequence" "ASCII value" "C equivalent" "Character represented")
+                   '(("`\\0`"  "0x0"  "`\\0`"  "Zero byte")
+                     ("`\\a`"  "0x7"  "`\\a`"  "[Bell character](https://en.wikipedia.org/wiki/Bell_character)")
+                     ("`\\b`"  "0x8"  "`\\b`"  "[Backspace](https://en.wikipedia.org/wiki/Backspace#^H)")
+                     ("`\\t`"  "0x9"  "`\\t`"  "[Horizontal Tab](https://en.wikipedia.org/wiki/Horizontal_Tab)")
+                     ("`\\n`"  "0xA"  "`\\n`"  "[Newline](https://en.wikipedia.org/wiki/Newline)")
+                     ("`\\v`"  "0xB"  "`\\v`"  "[Vertical tab](https://en.wikipedia.org/wiki/Vertical_Tab)")
+                     ("`\\f`"  "0xC"  "`\\f`"  "[Form feed](https://en.wikipedia.org/wiki/Formfeed)")
+                     ("`\\r`"  "0xD"  "`\\r`"  "[Carriage return](https://en.wikipedia.org/wiki/Carriage_Return)")
+                     ("`\\e`"  "0x1B" "`\\e`"  "[Escape character](https://en.wikipedia.org/wiki/Escape_character#ASCII_escape_character)")
+                     ("`\\s`"  "0x20" "-"      "Space ` `")
+                     ("`\\\"`" "0x22" "`\\\"`" "Double quote `\"`")
+                     ("`\\\\`" "0x5C" "`\\\\`" "[Backslash](https://en.wikipedia.org/wiki/Backslash) `\\`")
+                     ("`\\d`"  "0x7F" "-"      "[Delete character](https://en.wikipedia.org/wiki/Delete_character)")
+                     ))
+            (para (list "Note that unlike other languages, single quotes (`'`) can't be used to"
+                        "form string literals as it's busy being used for"
+                        "[quoting](#quotes-and-quasiquotation)! Therefore it doesn't need to be"
+                        "escaped within string literals."
+                        ))
+            end
+            (character-literals)
+           ))
+  )
+
+(defun character-literals ()
+  (section 3 "Character literals"
+           (list
+            (para (list "Individual characters can be written using character literals. They take"
+                        "the form of `\\#` followed by any ASCII character (e.g. `\\#a` or `\\#X`),"
+                        "and evaluate to their corresponding numerical byte value (note the type!)."
+                        "Like strings, character literals also support escape sequences, in which"
+                        "case they evaluate to its value from the above table, and any invalid"
+                        "characters result in a read error."
+                        ))
+            (code '((read-eval "\\#a")
+                    (read-eval "\\#A")
+                    (read-eval "\\# ")
+                    (read-eval "\\#\\n")
+                    (read-eval "\\#\\\\")
+                    (read-eval "\\#\\0")
+                    ))
+            end
+           ))
+)
 
 (defun semantics ()
   (section 3 "The meaning (semantics) that LispBM imposes on S-Expressions"
@@ -421,10 +481,10 @@
                           ))
             (para (list "In LispBM the set of atoms consist of:"
                         ))
-            (bullet (list "Numbers: Such as `1`, `2`, `3.14`, `65b`, `2u32`"
-                          "Strings: Such as \"hello world\", \"door\" ..."
+            (bullet (list "[Numbers](#numbers-and-numerical-types): Such as `1`, `2`, `3.14`, `65b`, `2u32`"
+                          "[Strings](#strings): Such as \"hello world\", \"door\" ..."
                           "Byte Arrays: Such as [1 2 3 4 5]"
-                          "Symbols: Such as `a`, `lambda`, `define`, `kurt-russel` ..."
+                          "[Symbols](#about-symbols): Such as `a`, `lambda`, `define`, `kurt-russel` ..."
                           ))
             (para (list "In LispBM a pair of S-expressions is created by an application of `cons` as `(cons a b)`"
                         "which creates the pair `(a . b)`. Convention is that `(e0 e1 ... eN)` = `(e0 . ( e1 . ... ( eN . nil)))`."
@@ -1820,6 +1880,35 @@
                       ))
               end)))
 
+(define lists-member
+  (ref-entry "member"
+             (list
+              (para (list "Check if a value is included in list. The form of an `member` expression is"
+                          "`(member value-expr list-expr)`. Equality is checked structurally, in the"
+                          "same way as" (str-merge (code-entry-ref "eq") ",") "meaning if you're"
+                          "checking numbers the types must match (see the following examples)."
+                          ))
+              (code '((member 3 (list 1 2 3))
+                      (member 3u (list 1 2 3))
+                      (member '(b c) '((a b) (b c)))
+                      ))
+              (para (list "This function can be used as a readable and efficient way of checking"
+                          "if a value is in some constant set of values. This often results in"
+                          "significantly less code than unrolling it as a series of"
+                          (str-merge (code-entry-ref "eq") "s") "inside an" (code-entry-ref "or")
+                          "expression."
+                          ))
+              (program '(((defun is-pet? (thing)
+                            (member thing '(cat dog)))
+                          (is-pet? 'cat)
+                          )
+                         ((is-pet? 'car))
+                         ((defun is-pet-unrolled? (thing)
+                            (or (eq thing 'cat) (eq thing 'dog)))
+                          (eq (is-pet? 'cat) (is-pet-unrolled? 'cat)))
+                         ))
+              end)))
+
 (define lists-setcar
   (ref-entry "setcar"
              (list
@@ -1971,6 +2060,7 @@
             lists-append
             lists-ix
             lists-setix
+            lists-member
             lists-setcar
             lists-setcdr
             lists-take
@@ -2024,10 +2114,14 @@
              (list
               (para (list "The `setassoc` function destructively updates a key-value mapping in an"
                           "alist. The form of a `setassoc` expression is `(setassoc alist-expr key-expr value-expr)`."
+                          "If you assign a key which doesn't exist in the original alist, it is"
+                          "left unchanged, while another association pair is added to the returned list."
                           ))
               (program '(((define apa (list '(1 . horse) '(2 . donkey) '(3 . shark)))
                           (setassoc apa 2 'llama)
                           )
+                         ((setassoc apa 4 'mouse))
+                         (apa)
                          ))
               end)))
 
@@ -3165,6 +3259,7 @@
    (section 1 "LispBM Reference Manual"
             (list ch-symbols
                   ch-numbers
+                  (ch-strings)
                   ch-syntax-semantics
                   ch-fun-imp
                   (section 1 "Reference"

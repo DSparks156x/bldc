@@ -37,7 +37,7 @@
 #define LBM_MEMORY_BITMAP_SIZE_28K LBM_MEMORY_BITMAP_SIZE(448)
 
 #ifndef EXTENSION_STORAGE_SIZE
-#define EXTENSION_STORAGE_SIZE		304
+#define EXTENSION_STORAGE_SIZE		306
 #endif
 
 #ifndef ADC_SAMPLE_MAX_LEN
@@ -80,6 +80,7 @@ static lbm_cid repl_cid_for_buffer = -1;
 static char *repl_buffer = 0;
 static volatile systime_t repl_time = 0;
 static int restart_cnt = 0;
+static volatile bool const_write_error = false;
 
 // Private functions
 static uint32_t timestamp_callback(void);
@@ -192,7 +193,6 @@ void lispif_process_cmd(unsigned char *data, unsigned int len,
 	case COMM_LISP_SET_RUNNING: {
 		bool ok = false;
 		bool running = data[0];
-		lispif_disable_all_events();
 
 		if (!running) {
 			ok = pause_eval(0, 2000);
@@ -214,13 +214,16 @@ void lispif_process_cmd(unsigned char *data, unsigned int len,
 		float mem_use = 0.0;
 
 		static systime_t time_last = 0;
+		utils_sys_lock_cnt();
 		if (eval_tp) {
 			cpu_use = 100.0 * (float)eval_tp->p_time / (float)(chVTGetSystemTimeX() - time_last);
 			time_last = chVTGetSystemTimeX();
 			eval_tp->p_time = 0;
 		} else {
+			utils_sys_unlock_cnt();
 			break;
 		}
+		utils_sys_unlock_cnt();
 
 		bool print_all = true;
 		if (len > 0) {
@@ -675,6 +678,8 @@ void lispif_stop(void) {
 		return;
 	}
 
+	lispif_stop_lib();
+
 	lispif_lock_lbm();
 
 	lbm_kill_eval();
@@ -699,11 +704,18 @@ bool lispif_restart(bool print, bool load_code, bool load_imports) {
 	if (!load_code || (code_data != 0 && code_len > 0)) {
 		lispif_disable_all_events();
 
-		if (lisp_thd_running && lbm_image_exists()) {
-			lbm_image_save_constant_heap_ix();
+		if (const_write_error) {
+			const_write_error = false;
+			flash_helper_erase_code(CODE_IND_LISP_CONST);
 		}
 
+		bool save_heap = lisp_thd_running && lbm_image_exists();
+
 		lispif_stop();
+
+		if (save_heap) {
+			lbm_image_save_constant_heap_ix();
+		}
 
 		int code_chars = 0;
 		if (code_data) {
@@ -847,6 +859,10 @@ void lispif_add_ext_load_callback(void (*p_func)(bool)) {
 	}
 }
 
+bool lispif_is_eval_task(void) {
+	return eval_tp == chThdGetSelfX();
+}
+
 lbm_uint lispif_const_heap_max_ind(void)  {
 	return image_max_ind;
 }
@@ -871,6 +887,7 @@ static bool image_write(uint32_t w, int32_t ix, bool const_heap) {
 
 	if (image_ptr[ix] != 0xffffffff) {
 		commands_printf_lisp("Attempted to write to const heap at %d, but it is already occupied", ix);
+		const_write_error = true;
 		return false;
 	}
 
