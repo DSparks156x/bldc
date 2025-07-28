@@ -62,7 +62,8 @@ static void (*m_read_callback)(float *acc, float *gyro, float *mag, float dt) = 
 
 void imu_init(imu_config *set) {
 	bool imu_changed = set->sample_rate_hz != m_settings.sample_rate_hz ||
-			set->type != m_settings.type || set->filter != m_settings.filter;
+			set->type != m_settings.type || set->filter != m_settings.filter ||
+			set->use_magnetometer != m_settings.use_magnetometer;
 
 	m_settings = *set;
 
@@ -106,6 +107,8 @@ void imu_init(imu_config *set) {
 	m_bmi_state.filter = set->filter;
 	lsm6ds3_set_filter(set->filter);
 
+	bool highspeed = !set->use_magnetometer;
+
 	if (set->type == IMU_TYPE_INTERNAL) {
 #ifdef MPU9X50_SDA_GPIO
 		imu_init_mpu9x50(MPU9X50_SDA_GPIO, MPU9X50_SDA_PIN,
@@ -127,7 +130,7 @@ void imu_init(imu_config *set) {
 
 #ifdef LSM6DS3_SDA_GPIO
 		imu_init_lsm6ds3(LSM6DS3_SDA_GPIO, LSM6DS3_SDA_PIN,
-				LSM6DS3_SCL_GPIO, LSM6DS3_SCL_PIN);
+				LSM6DS3_SCL_GPIO, LSM6DS3_SCL_PIN, highspeed);
 		m_imu_type_internal = "LSM6DS3";
 #endif
 
@@ -138,7 +141,7 @@ void imu_init(imu_config *set) {
 		palSetPadMode(LSM6DS3_MISO_GPIO, LSM6DS3_MISO_PIN, PAL_MODE_OUTPUT_PUSHPULL);
 		palClearPad(LSM6DS3_MISO_GPIO, LSM6DS3_MISO_PIN);
 		imu_init_lsm6ds3(LSM6DS3_MOSI_GPIO, LSM6DS3_MOSI_PIN,
-				LSM6DS3_SCK_GPIO, LSM6DS3_SCK_PIN);
+				LSM6DS3_SCK_GPIO, LSM6DS3_SCK_PIN, highspeed);
 		m_imu_type_internal = "LSM6DS3";
 #endif
 
@@ -161,7 +164,7 @@ void imu_init(imu_config *set) {
 				HW_I2C_SCL_PORT, HW_I2C_SCL_PIN);
 	} else if(set->type == IMU_TYPE_EXTERNAL_LSM6DS3) {
 		imu_init_lsm6ds3(HW_I2C_SDA_PORT, HW_I2C_SDA_PIN,
-				HW_I2C_SCL_PORT, HW_I2C_SCL_PIN);
+				HW_I2C_SCL_PORT, HW_I2C_SCL_PIN, highspeed);
 	} else if (set->type == IMU_TYPE_EXTERNAL_BMI160) {
 		imu_init_bmi160_i2c(HW_I2C_SDA_PORT, HW_I2C_SDA_PIN,
 				HW_I2C_SCL_PORT, HW_I2C_SCL_PIN);
@@ -260,13 +263,21 @@ void imu_init_bmi160_spi(stm32_gpio_t *nss_gpio, int nss_pin,
 }
 
 void imu_init_lsm6ds3(stm32_gpio_t *sda_gpio, int sda_pin,
-		stm32_gpio_t *scl_gpio, int scl_pin) {
+		stm32_gpio_t *scl_gpio, int scl_pin, bool highspeed) {
 
 	m_i2c_bb.sda_gpio = sda_gpio;
 	m_i2c_bb.sda_pin = sda_pin;
 	m_i2c_bb.scl_gpio = scl_gpio;
 	m_i2c_bb.scl_pin = scl_pin;
-	m_i2c_bb.rate = I2C_BB_RATE_400K;
+
+	if (highspeed) {
+		m_i2c_bb.rate = I2C_BB_RATE_700K;
+		commands_printf("LSM6DS3 speed: 700 kHz");
+	} else {
+		m_i2c_bb.rate = I2C_BB_RATE_400K;
+		commands_printf("LSM6DS3 speed: 400 kHz");
+	}
+
 	i2c_bb_init(&m_i2c_bb);
 
 	lsm6ds3_init(&m_i2c_bb, m_thd_work_area, sizeof(m_thd_work_area));
