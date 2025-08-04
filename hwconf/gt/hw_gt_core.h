@@ -166,15 +166,15 @@
 #define HW_UART_P_RX_PORT		GPIOD
 #define HW_UART_P_RX_PIN		9
 
-// ICU Peripheral - Cool ass buzzer
+// ICU Peripheral - status bar
 #define HW_USE_SERVO_TIM4
 #define HW_ICU_TIMER			TIM4
 #define HW_ICU_TIM_CLK_EN()		RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, ENABLE)
 #define HW_ICU_DEV				ICUD4
 #define HW_ICU_CHANNEL			ICU_CHANNEL_1
 #define HW_ICU_GPIO_AF			GPIO_AF_TIM4
-#define HW_ICU_GPIO				GPIOC //passive buzzer. sounds like its dying without an actual tone signal. but its enough to know its booting/faintly alive. 
-#define HW_ICU_PIN				9
+#define HW_ICU_GPIO				GPIOB //Status bar
+#define HW_ICU_PIN				10
 
 // I2C Peripheral - Humidity/Temp Sensor
 #define HW_USE_I2CD1

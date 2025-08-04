@@ -34,8 +34,8 @@
 #ifndef MCCONF_L_CURRENT_MIN
 #define MCCONF_L_CURRENT_MIN        -85
 #endif
-#ifndef MCCONF_SENSOR_MODE
-#define MCCONF_SENSOR_MODE          FOC_SENSOR_MODE_HALL
+#ifndef MCCONF_FOC_SENSOR_MODE
+#define MCCONF_FOC_SENSOR_MODE      FOC_SENSOR_MODE_HALL
 #endif
 #ifndef MCCONF_HALL_TAB_0
 #define MCCONF_HALL_TAB_0       255
@@ -47,16 +47,16 @@
 #define MCCONF_HALL_TAB_2       132
 #endif
 #ifndef MCCONF_HALL_TAB_3
-#define MCCONF_HALL_TAB_3       99
+#define MCCONF_HALL_TAB_3       97
 #endif
 #ifndef MCCONF_HALL_TAB_4
-#define MCCONF_HALL_TAB_4       199
+#define MCCONF_HALL_TAB_4       2
 #endif
 #ifndef MCCONF_HALL_TAB_5
 #define MCCONF_HALL_TAB_5       32
 #endif
 #ifndef MCCONF_HALL_TAB_6
-#define MCCONF_HALL_TAB_6       165
+#define MCCONF_HALL_TAB_6       169
 #endif
 #ifndef MCCONF_HALL_TAB_7
 #define MCCONF_HALL_TAB_7       255
