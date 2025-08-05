@@ -87,11 +87,11 @@
 #ifdef GTS
     #ifdef GTS150V //for extra spicy 150v capable GTS controllers.
         #ifndef VIN_R1
-        #define VIN_R1					????? // 20.05/0.861 = 23.2868 = (R1+R2) / R2 )
+        #define VIN_R1					48 // placeholder
         #endif
     #else
         #ifndef VIN_R1
-        #define VIN_R1					????? // 20.05/0.861 = 23.2868 = (R1+R2) / R2 )
+        #define VIN_R1					34 // placeholder
         #endif
     #endif
     #ifdef  GTS150A //for extra spicy 150A measurement GTS controllers. 
