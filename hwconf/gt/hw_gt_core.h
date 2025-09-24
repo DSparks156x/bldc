@@ -87,25 +87,25 @@
 #ifdef GTS
     #ifdef GTS150V //for extra spicy 150v capable GTS controllers.
         #ifndef VIN_R1
-        #define VIN_R1					48 // placeholder
+            #define VIN_R1					48 // placeholder
         #endif
     #else
         #ifndef VIN_R1
-        #define VIN_R1					34 // placeholder
+            #define VIN_R1					34 // placeholder. if reg GT cant measure more than 2v above full charge this thing probably cant either. 
         #endif
     #endif
     #ifdef  GTS150A //for extra spicy 150A measurement GTS controllers. 
         #ifndef CURRENT_AMP_GAIN
-        #define CURRENT_AMP_GAIN		(0.01333*(2.0/3.0))  //0.02v/a * 2/3 divider
+            #define CURRENT_AMP_GAIN		(0.01333*(2.0/3.0))  //0.01333v/a * 2/3 divider
         #endif
     #else
         #ifndef CURRENT_AMP_GAIN
-        #define CURRENT_AMP_GAIN		(0.02*(2.0/3.0))  //0.02v/a * 2/3 divider
+            #define CURRENT_AMP_GAIN		(0.02*(2.0/3.0))  //0.02v/a * 2/3 divider
         #endif     
     #endif
-#ifndef IN_CURRENT_GAIN
-#define IN_CURRENT_GAIN         (-0.04*(2.0/3.0)) //0.04v/a * 2/3 divider * inverted
-#endif
+    #ifndef IN_CURRENT_GAIN
+        #define IN_CURRENT_GAIN         (-0.04*(2.0/3.0)) //0.04v/a * 2/3 divider * inverted
+    #endif
 #endif
 #ifdef GT
 #ifndef VIN_R1

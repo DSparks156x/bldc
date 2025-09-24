@@ -37,7 +37,29 @@
 #ifndef MCCONF_FOC_SENSOR_MODE
 #define MCCONF_FOC_SENSOR_MODE      FOC_SENSOR_MODE_HALL
 #endif
-
+#ifndef MCCONF_HALL_TAB_0
+#define MCCONF_HALL_TAB_0       255
+#endif
+#ifndef MCCONF_HALL_TAB_1
+#define MCCONF_HALL_TAB_1       65
+#endif
+#ifndef MCCONF_HALL_TAB_2
+#define MCCONF_HALL_TAB_2       132
+#endif
+#ifndef MCCONF_HALL_TAB_3
+#define MCCONF_HALL_TAB_3       97
+#endif
+#ifndef MCCONF_HALL_TAB_4
+#define MCCONF_HALL_TAB_4       2
+#endif
+#ifndef MCCONF_HALL_TAB_5
+#define MCCONF_HALL_TAB_5       32
+#endif
+#ifndef MCCONF_HALL_TAB_6
+#define MCCONF_HALL_TAB_6       169
+#endif
+#ifndef MCCONF_HALL_TAB_7
+#define MCCONF_HALL_TAB_7       255
 #endif
 #ifndef MCCONF_FOC_SL_ERPM_START
 #define MCCONF_FOC_SL_ERPM_START        1500
