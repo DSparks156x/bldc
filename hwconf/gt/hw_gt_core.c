@@ -26,6 +26,7 @@
 #include "terminal.h"
 #include "commands.h"
 #include "mc_interface.h"
+#include "ledpwm.h"
 
 // Variables
 static volatile bool i2c_running = false;
@@ -46,6 +47,12 @@ static const I2CConfig i2cfg = {
 static void terminal_cmd_gt_input_offset(int argc, const char **argv);
 
 static void terminal_cmd_gt_get_humidity(int argc, const char **argv);
+
+static void terminal_cmd_gt_set_front_high(int argc, const char **argv);
+
+static void terminal_cmd_gt_set_rear_high(int argc, const char **argv);
+
+static void terminal_cmd_gt_set_highbeam_pwm(int argc, const char **argv);
 
 void buzzer_beep(void) {
     // External Buzzer (using servo pin!)
@@ -104,8 +111,16 @@ void hw_init_gpio(void) {
 	//palSetPadMode(GPIOB, 0, PAL_MODE_INPUT_ANALOG);//current phase 1 vref - not really need. offset calibration inherently handles these. 
 	//palSetPadMode(GPIOB, 1, PAL_MODE_INPUT_ANALOG);//current phase 2 vref 
 
+	//High beam pwm driver.
+	palSetPadMode(GPIOB,11, PAL_MODE_OUTPUT_PUSHPULL | PAL_STM32_OSPEED_HIGHEST);
+
+	//High beams f/r
+	palSetPadMode(GPIOD,13, PAL_MODE_OUTPUT_OPENDRAIN | PAL_STM32_OSPEED_HIGHEST); //Front
+	palSetPadMode(GPIOD,14, PAL_MODE_OUTPUT_OPENDRAIN | PAL_STM32_OSPEED_HIGHEST); //Rear
+
 	buzzer_beep();
 	
+	hw_gt_set_highbeam_pwm(0); // set high beam driver off initially.
 	//Terminal stuff
 	terminal_register_command_callback(
 		"gt_input_offset",
@@ -118,6 +133,21 @@ void hw_init_gpio(void) {
 		"Print GT humidity sensor information",
 		0,
 		terminal_cmd_gt_get_humidity);
+	terminal_register_command_callback(
+		"gt_set_front_high",
+		"Enables GT Front High Beam",
+		0,
+		terminal_cmd_gt_set_front_high);
+	terminal_register_command_callback(
+		"gt_set_rear_high",
+		"Enables GT Rear High Beam",
+		0,
+		terminal_cmd_gt_set_rear_high);
+	terminal_register_command_callback(
+		"gt_set_highbeam_pwm",
+		"Sets PWM signal to GT high beam driver",
+		0,
+		terminal_cmd_gt_set_highbeam_pwm);
 
 }
 
@@ -319,6 +349,20 @@ void hw_gt_start_input_current_sensor_offset_measurement(void){
 	input_current_sensor_offset_sum = 0;
 }
 
+void hw_gt_set_front_high(void){
+	palSetPad(GPIOD,13);
+	palClearPad(GPIOD,14);
+}
+
+void hw_gt_set_rear_high(void){
+	palSetPad(GPIOD,14);
+	palClearPad(GPIOD,13);
+}
+
+void hw_gt_set_highbeam_pwm(float intensity){
+	ledpwm_set_intensity(LED_HW1, intensity);
+}
+
 static void terminal_cmd_gt_input_offset(int argc, const char **argv) {
 	(void)argc;
 	(void)argv;
@@ -337,5 +381,46 @@ static void terminal_cmd_gt_get_humidity(int argc, const char **argv) {
 	commands_printf("Humidity is at %.1f%%", (double)humidity);
 	commands_printf(" ");
 	commands_printf("Temperature is at %.1f C", (double)temp);
+	return;
+}
+
+static void terminal_cmd_gt_set_front_high(int argc, const char **argv) {
+	(void)argc;
+	(void)argv;
+	hw_gt_set_front_high();
+	commands_printf("Front High Beam Enabled");
+	return;
+}
+
+static void terminal_cmd_gt_set_rear_high(int argc, const char **argv) {
+	(void)argc;
+	(void)argv;
+	hw_gt_set_rear_high();
+	commands_printf("Rear High Beam Enabled");
+	return;
+}
+
+static void terminal_cmd_gt_set_highbeam_pwm(int argc, const char **argv) {
+	(void)argc;
+	(void)argv;
+	float intensity;
+	if( argc == 2 ) {
+
+		sscanf(argv[1], "%f", intensity);
+
+		//limit max an min argument
+		if( intensity >= 0.0 && intensity < 1.0  ){
+			// Store data in eeprom
+			hw_gt_set_highbeam_pwm(intensity);
+		}
+		else{
+			commands_printf("argument should be >= 0.00 and < 1.0");
+		}
+
+	}
+	else {
+		commands_printf("1 argument required, float 0-1");
+	}
+	commands_printf(" ");
 	return;
 }

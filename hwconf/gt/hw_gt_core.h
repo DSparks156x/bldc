@@ -292,10 +292,18 @@
 #define HW_LIM_TEMP_FET			-40.0, 85.0 //setting this lowish. fet kaboom bad.
 #endif
 
+//Highbeam stuff
+#define LED_PWM1_ON()							palClearPad(GPIOB,11) // LED HW1 - high beam driver pwm - may need to be flipped
+#define LED_PWM1_OFF()							palSetPad(GPIOB,11)
+
+
 //HW Functions
 void hw_gt_get_hdc(float* temp, float* humidity);
 float hw_gt_read_input_current(void);
 void hw_gt_get_input_current_offset(void);
 void hw_gt_start_input_current_sensor_offset_measurement(void);
+void hw_gt_set_front_high(void);
+void hw_gt_set_rear_high(void);
+void hw_gt_set_highbeam_pwm(float);
 #endif /* HW_GT_CORE_H_ */
 
