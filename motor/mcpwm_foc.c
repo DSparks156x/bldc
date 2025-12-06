@@ -3736,6 +3736,9 @@ void mcpwm_foc_adc_int_handler(void *p, uint32_t flags) {
 				conf_now->foc_cc_decoupling == FOC_CC_DECOUPLING_CROSS_BEMF) {
 			motor_now->m_motor_state.vq_int -= motor_now->m_pll_speed * conf_now->foc_motor_flux_linkage;
 		}
+		#ifdef HW_HAS_NO_PHASE_VSENSE //better than nothing
+		motor_now->m_motor_state.vq_int -= motor_now->m_pll_speed * conf_now->foc_motor_flux_linkage;
+		#endif
 
 		// Update corresponding modulation
 		/* voltage_normalize = 1/(2/3*V_bus) */
