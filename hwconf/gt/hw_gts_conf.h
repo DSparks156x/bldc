@@ -93,6 +93,20 @@
 #ifndef MCCONF_SI_BATTERY_AH
 #define MCCONF_SI_BATTERY_AH        4.5
 #endif
+#ifndef MCCONF_L_IN_CURRENT_MAP_START 
+#define MCCONF_L_IN_CURRENT_MAP_START 0.8
+#endif
+#ifndef MCCONF_L_MAX_ABS_CURRENT
+#define MCCONF_L_MAX_ABS_CURRENT		150.0	//Cant measure high enough for an OC fault. so. oh well. 
+#endif
+#ifndef MCCONF_L_IN_CURRENT_MAX
+#define MCCONF_L_IN_CURRENT_MAX         30
+#endif
+#ifndef MCCONF_L_IN_CURRENT_MIN
+#define MCCONF_L_IN_CURRENT_MIN         -30
+#endif
+
+
 
 //Default app conf
 #ifndef APPCONF_IMU_ROT_YAW

@@ -37,29 +37,29 @@
 #ifndef MCCONF_FOC_SENSOR_MODE
 #define MCCONF_FOC_SENSOR_MODE      FOC_SENSOR_MODE_HALL
 #endif
-#ifndef MCCONF_HALL_TAB_0
-#define MCCONF_HALL_TAB_0       255
+#ifndef MCCONF_FOC_HALL_TAB_0
+#define MCCONF_FOC_HALL_TAB_0       255
 #endif
-#ifndef MCCONF_HALL_TAB_1
-#define MCCONF_HALL_TAB_1       65
+#ifndef MCCONF_FOC_HALL_TAB_1
+#define MCCONF_FOC_HALL_TAB_1       65
 #endif
-#ifndef MCCONF_HALL_TAB_2
-#define MCCONF_HALL_TAB_2       132
+#ifndef MCCONF_FOC_HALL_TAB_2
+#define MCCONF_FOC_HALL_TAB_2       132
 #endif
-#ifndef MCCONF_HALL_TAB_3
-#define MCCONF_HALL_TAB_3       97
+#ifndef MCCONF_FOC_HALL_TAB_3
+#define MCCONF_FOC_HALL_TAB_3       97
 #endif
-#ifndef MCCONF_HALL_TAB_4
-#define MCCONF_HALL_TAB_4       2
+#ifndef MCCONF_FOC_HALL_TAB_4
+#define MCCONF_FOC_HALL_TAB_4       2
 #endif
-#ifndef MCCONF_HALL_TAB_5
-#define MCCONF_HALL_TAB_5       32
+#ifndef MCCONF_FOC_HALL_TAB_5
+#define MCCONF_FOC_HALL_TAB_5       32
 #endif
-#ifndef MCCONF_HALL_TAB_6
-#define MCCONF_HALL_TAB_6       169
+#ifndef MCCONF_FOC_HALL_TAB_6
+#define MCCONF_FOC_HALL_TAB_6       169
 #endif
-#ifndef MCCONF_HALL_TAB_7
-#define MCCONF_HALL_TAB_7       255
+#ifndef MCCONF_FOC_HALL_TAB_7
+#define MCCONF_FOC_HALL_TAB_7       255
 #endif
 #ifndef MCCONF_FOC_SL_ERPM_START
 #define MCCONF_FOC_SL_ERPM_START        1500
@@ -92,6 +92,18 @@
 #endif
 #ifndef MCCONF_SI_BATTERY_AH
 #define MCCONF_SI_BATTERY_AH        8.4
+#endif
+#ifndef MCCONF_L_IN_CURRENT_MAP_START 
+#define MCCONF_L_IN_CURRENT_MAP_START 0.8
+#endif
+#ifndef MCCONF_L_MAX_ABS_CURRENT
+#define MCCONF_L_MAX_ABS_CURRENT		150.0	//Cant measure high enough for an OC fault. so. oh well. 
+#endif
+#ifndef MCCONF_L_IN_CURRENT_MAX
+#define MCCONF_L_IN_CURRENT_MAX         30
+#endif
+#ifndef MCCONF_L_IN_CURRENT_MIN
+#define MCCONF_L_IN_CURRENT_MIN         -30
 #endif
 
 //Default app conf
