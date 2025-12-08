@@ -150,12 +150,12 @@
 #define HW_ADC_EXT2_PIN			0
 
 // UART Peripheral - BMS RS485
-#define HW_UART_DEV				SD1
-#define HW_UART_GPIO_AF			GPIO_AF_USART1 //USART 2
-#define HW_UART_TX_PORT			GPIOB //PA2 
-#define HW_UART_TX_PIN			6
-#define HW_UART_RX_PORT			GPIOB //PA3
-#define HW_UART_RX_PIN			7
+#define HW_UART_DEV				SD2
+#define HW_UART_GPIO_AF			GPIO_AF_USART2 //USART 2
+#define HW_UART_TX_PORT			GPIOA //PA2 
+#define HW_UART_TX_PIN			2
+#define HW_UART_RX_PORT			GPIOA //PA3
+#define HW_UART_RX_PIN			3
 
 // Permanent UART Peripheral - Bluetooth Module 
 #define HW_UART_P_BAUD		115200
