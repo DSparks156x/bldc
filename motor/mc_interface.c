@@ -2483,7 +2483,7 @@ static void update_override_limits(volatile motor_if_state_t *motor, volatile mc
 	// from iq based on MTPA and field weakening, which makes it tricky to limit them together in the fast
 	// current loop. For now that is done here. Note that iq is updated recursively depending on the resulting
 	// input current from id and iq.
-	#ifndef HW_HAS_INPUT
+
 	float lo_max_i_in = l_current_max_tmp;
 	if (motor->m_i_in_filter > 0.0 && conf->l_in_current_map_start < 0.98) {
 		float frac = motor->m_i_in_filter / conf->lo_in_current_max;
