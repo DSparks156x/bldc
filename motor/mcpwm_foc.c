@@ -5003,7 +5003,7 @@ static void update_valpha_vbeta(motor_all_state_t *motor, float mod_alpha, float
 	UTILS_NAN_ZERO(vd_pi_filt);
 	UTILS_NAN_ZERO(vq_pi_filt);
 	#ifndef PHASE_LP_CONSTANT
-	#define PHASE_LP_CONSTANT = 0.2
+	#define PHASE_LP_CONSTANT 0.2
 	#endif
 	UTILS_LP_FAST(vd_pi_filt, state_m->vd_pi, PHASE_LP_CONSTANT);
 	UTILS_LP_FAST(vq_pi_filt, state_m->vq_pi, PHASE_LP_CONSTANT);
