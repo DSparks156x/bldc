@@ -25,6 +25,7 @@ LISPBMSRC = $(LISPBM)/src/env.c \
             $(LISPBM)/src/extensions/mutex_extensions.c \
             $(LISPBM)/src/extensions/lbm_dyn_lib.c \
 			lispBM/lispif.c \
+            lispBM/aes.c \
 			lispBM/lispif_vesc_extensions.c \
 			lispBM/lispif_c_lib.c \
             lispBM/lbm_vesc_utils.c

@@ -149,6 +149,9 @@
 #define HW_ADC_EXT2_GPIO		GPIOC
 #define HW_ADC_EXT2_PIN			0
 
+#define HW_ADC_EXT3_GPIO        GPIOD
+#define HW_ADC_EXT3_PIN         4
+
 // UART Peripheral - BMS RS485
 #define HW_UART_DEV				SD2
 #define HW_UART_GPIO_AF			GPIO_AF_USART2 //USART 2

@@ -65,6 +65,9 @@
 #include <math.h>
 #include <ctype.h>
 #include <stdarg.h>
+#include "aes.h"
+
+#define AES_CTR 1
 
 typedef struct {
 	// BMS
@@ -5758,6 +5761,61 @@ static lbm_value ext_cmds_proc(lbm_value *args, lbm_uint argn) {
 	return ENC_SYM_TRUE;
 }
 
+static lbm_value ext_aes_ctr_crypt(lbm_value *args, lbm_uint argn) {
+    if (!lbm_check_argn_range(argn, 5, 5)) {
+        return ENC_SYM_EERROR;
+    }
+
+    if (!lbm_is_array_r(args[0]) || !lbm_is_array_rw(args[1]) || !lbm_is_array_rw(args[2])) {
+        lbm_set_error_reason("Invalid array types");
+        return ENC_SYM_EERROR;
+    }
+
+    lbm_array_header_t *key_header     = (lbm_array_header_t *)lbm_car(args[0]);
+    lbm_array_header_t *counter_header = (lbm_array_header_t *)lbm_car(args[1]);
+    lbm_array_header_t *data_header    = (lbm_array_header_t *)lbm_car(args[2]);
+
+    // Check key size
+    if (key_header->size != 16 && key_header->size != 24 && key_header->size != 32) {
+        lbm_set_error_reason("Key must be 16, 24, or 32 bytes");
+        return ENC_SYM_EERROR;
+    }
+
+    // counter must be exactly 16 bytes (block size)
+    if (counter_header->size != 16) {
+        lbm_set_error_reason("Counter must be 16 bytes");
+        return ENC_SYM_EERROR;
+    }
+
+    lbm_int start_offset = lbm_dec_as_i32(args[3]);
+    lbm_int length       = lbm_dec_as_i32(args[4]);
+
+    if (start_offset < 0 || length < 0 ||
+        (start_offset + length) > (lbm_int)data_header->size) {
+        lbm_set_error_reason("Invalid start offset or length");
+        return ENC_SYM_EERROR;
+    }
+
+    uint8_t *key     = (uint8_t*)key_header->data;
+    uint8_t *counter = (uint8_t*)counter_header->data;
+    uint8_t *data    = ((uint8_t*)data_header->data) + start_offset;
+
+    // tiny-AES-c context
+    struct AES_ctx ctx;
+    AES_init_ctx_iv(&ctx, key, counter);
+
+    // Perform in-place CTR
+    AES_CTR_xcrypt_buffer(&ctx, data, length);
+
+    // IMPORTANT:
+    // tiny-AES-c updates the IV (counter) internally during CTR.
+    // We need the updated counter visible to the caller.
+    memcpy(counter_header->data, ctx.Iv, 16);
+
+    return ENC_SYM_TRUE;
+}
+
+
 static const char* dyn_functions[] = {
 		"(defun uart-read-bytes (buffer n ofs)"
 		"(let ((rd (uart-read buffer n ofs)))"
@@ -6101,6 +6159,9 @@ void lispif_load_vesc_extensions(bool main_found) {
 		// Commands
 		lbm_add_extension("cmds-start-stop", ext_cmds_start_stop);
 		lbm_add_extension("cmds-proc", ext_cmds_proc);
+		lbm_add_extension("aes-ctr-crypt", ext_aes_ctr_crypt);
+
+
 
 		// Extension libraries
 		lbm_array_extensions_init();
