@@ -5816,6 +5816,7 @@ static lbm_value ext_aes_ctr_crypt(lbm_value *args, lbm_uint argn) {
 }
 
 
+
 static const char* dyn_functions[] = {
 		"(defun uart-read-bytes (buffer n ofs)"
 		"(let ((rd (uart-read buffer n ofs)))"
@@ -6160,6 +6161,7 @@ void lispif_load_vesc_extensions(bool main_found) {
 		lbm_add_extension("cmds-start-stop", ext_cmds_start_stop);
 		lbm_add_extension("cmds-proc", ext_cmds_proc);
 		lbm_add_extension("aes-ctr-crypt", ext_aes_ctr_crypt);
+		lbm_add_extension("pront", ext_print);
 
 
 
