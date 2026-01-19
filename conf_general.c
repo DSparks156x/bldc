@@ -160,14 +160,6 @@ __attribute__((section(".text2"))) void conf_general_init(void) {
  * app config to get lost.
  */
 __attribute__((section(".text2"))) bool conf_general_store_backup_data(void) {
-	mc_interface_ignore_input_both(5000);
-	mc_interface_release_motor_override_both();
-
-	if (!mc_interface_wait_for_motor_release_both(3.0)) {
-		return false;
-	}
-
-	utils_sys_lock_cnt();
 	timeout_configure_IWDT_slowest();
 
 	bool is_ok = true;
@@ -190,8 +182,6 @@ __attribute__((section(".text2"))) bool conf_general_store_backup_data(void) {
 
 	FLASH_Lock();
 	timeout_configure_IWDT();
-	mc_interface_ignore_input_both(100);
-	utils_sys_unlock_cnt();
 
 	return is_ok;
 }
@@ -294,14 +284,6 @@ __attribute__((section(".text2"))) static bool store_eeprom_var(eeprom_var *v, i
 	var0 = v->as_u32 >> 16;
 	var1 = v->as_u32 & 0xFFFF;
 
-	mc_interface_ignore_input_both(5000);
-	mc_interface_release_motor_override_both();
-
-	if (!mc_interface_wait_for_motor_release_both(3.0)) {
-		return 100;
-	}
-
-	utils_sys_lock_cnt();
 	timeout_configure_IWDT_slowest();
 
 	FLASH_Unlock();
@@ -320,8 +302,6 @@ __attribute__((section(".text2"))) static bool store_eeprom_var(eeprom_var *v, i
 
 	FLASH_Lock();
 	timeout_configure_IWDT();
-	mc_interface_ignore_input_both(100);
-	utils_sys_unlock_cnt();
 
 	return is_ok;
 }
