@@ -29,7 +29,7 @@
 #define HW_NO_PHASE_VSENSE //It has no phase voltage sensing. why. 
 #define HW_USE_INTERNAL_RC  
 #define HW_HAS_INPUT_CURRENT_SENSOR //gt basically an axiom. 
-
+#define HW_HAS_NO_CAN //why would gt have this.
 // Macros
 #define LED_GREEN_ON() //it gets angry without these. obviously the gt controller doesnt have basic bitch status leds. 
 #define LED_GREEN_OFF()
