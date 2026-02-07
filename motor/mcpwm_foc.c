@@ -75,7 +75,7 @@ static THD_FUNCTION(pid_thread, arg);
 static volatile bool pid_thd_stop;
 
 // Macros
-#ifdef HW_HAS_3_SHUNTS
+#if defined(HW_HAS_3_SHUNTS) || defined(HW_SHUNT_1_2) //some 2 shunt controllers have shunts on channels 1 and 2, not 1 and 3. 
 #define TIMER_UPDATE_DUTY_M1(duty1, duty2, duty3) \
 		TIM1->CR1 |= TIM_CR1_UDIS; \
 		TIM1->CCR1 = duty1; \
@@ -3714,7 +3714,7 @@ void mcpwm_foc_adc_int_handler(void *p, uint32_t flags) {
 
 		float s = state_now->phase_sin;
 		float c = state_now->phase_cos;
-
+		#ifndef HW_HAS_NO_PHASE_VSENSE
 		// Park transform
 		float vd_tmp = c * state_now->v_alpha + s * state_now->v_beta;
 		float vq_tmp = c * state_now->v_beta  - s * state_now->v_alpha;
@@ -3724,18 +3724,20 @@ void mcpwm_foc_adc_int_handler(void *p, uint32_t flags) {
 
 		UTILS_LP_FAST(state_now->vd, vd_tmp, 0.2);
 		UTILS_LP_FAST(state_now->vq, vq_tmp, 0.2);
-
+		#endif
 		// Set the current controller integrator to the BEMF voltage to avoid
 		// a current spike when the motor is driven again. Notice that we have
 		// to take decoupling into account.
 		state_now->vd_int = state_now->vd;
 		state_now->vq_int = state_now->vq;
-
+		#ifdef HW_HAS_NO_PHASE_VSENSE
+		state_now->vq_int -= motor_now->m_pll_speed * conf_now->foc_motor_flux_linkage;
+		#else
 		if (conf_now->foc_cc_decoupling == FOC_CC_DECOUPLING_BEMF ||
 				conf_now->foc_cc_decoupling == FOC_CC_DECOUPLING_CROSS_BEMF) {
 			state_now->vq_int -= motor_now->m_pll_speed * conf_now->foc_motor_flux_linkage;
 		}
-
+		#endif
 		// Update corresponding modulation
 		/* voltage_normalize = 1/(2/3*V_bus) */
 		const float voltage_normalize = 1.5 / state_now->v_bus;
@@ -4994,6 +4996,8 @@ static void control_current(motor_all_state_t *motor, float dt) {
 static void update_valpha_vbeta(motor_all_state_t *motor, float mod_alpha, float mod_beta, float voltage_normalize) {
 	motor_state_t *state_m = &motor->m_motor_state;
 	mc_configuration *conf_now = motor->m_conf;
+
+#ifndef HW_HAS_NO_PHASE_VSENSE
 	float Va, Vb, Vc;
 
 	volatile float *ofs_volt = conf_now->foc_offsets_voltage_undriven;
@@ -5034,6 +5038,12 @@ static void update_valpha_vbeta(motor_all_state_t *motor, float mod_alpha, float
 	Vc = (ADC_V_L2_VOLTS - ofs_volt[1]) * ((VIN_R1 + VIN_R2) / VIN_R2) * ADC_VOLTS_PH_FACTOR;
 #endif
 #endif
+#endif
+
+#ifdef HW_HAS_NO_PHASE_VSENSE //calculate v_alpha and v_beta from vd and vq. 
+	float v_alpha = state_m->phase_cos * state_m->vd - state_m->phase_sin * state_m->vq;
+	float v_beta = state_m->phase_cos * state_m->vq + state_m->phase_sin * state_m->vd;
+#endif
 
 	// Deadtime compensation
 	float s = state_m->phase_sin;
@@ -5055,17 +5065,20 @@ static void update_valpha_vbeta(motor_all_state_t *motor, float mod_alpha, float
 
 	mod_alpha -= mod_alpha_comp;
 	mod_beta -= mod_beta_comp;
-
+	#ifndef HW_HAS_NO_PHASE_VSENSE
 	state_m->va = Va;
 	state_m->vb = Vb;
 	state_m->vc = Vc;
+	#endif
 	state_m->mod_alpha_measured = mod_alpha;
 	state_m->mod_beta_measured = mod_beta;
 
 	// v_alpha = 2/3*Va - 1/3*Vb - 1/3*Vc
 	// v_beta  = 1/sqrt(3)*Vb - 1/sqrt(3)*Vc
+	#ifndef HW_HAS_NO_PHASE_VSENSE
 	float v_alpha = (1.0 / 3.0) * (2.0 * Va - Vb - Vc);
 	float v_beta = ONE_BY_SQRT3 * (Vb - Vc);
+	#endif
 
 	// Keep the modulation updated so that the filter stays updated
 	// even when the motor is undriven.

@@ -2136,7 +2136,11 @@ void mc_interface_mc_timer_isr(bool is_second_motor, float dt) {
 				if (is_second_motor) {
 					zero = (ADC_V_L4 + ADC_V_L5 + ADC_V_L6) / 3;
 				} else {
+					#ifndef HW_HAS_NO_PHASE_VSENSE
 					zero = (ADC_V_L1 + ADC_V_L2 + ADC_V_L3) / 3;
+					#else
+					zero = 0; //calculating this from Alpha and Beta assumes they are balanced. zero would always be zero. 
+					#endif
 				}
 				m_phase_samples[m_sample_now] = (uint8_t)(mcpwm_foc_get_phase() / 360.0 * 250.0);
 //				m_phase_samples[m_sample_now] = (uint8_t)(mcpwm_foc_get_phase_observer() / 360.0 * 250.0);
@@ -2166,7 +2170,6 @@ void mc_interface_mc_timer_isr(bool is_second_motor, float dt) {
 						m_curr1_samples[m_sample_now] = ADC_curr_norm_value[4] * (8.0 / FAC_CURRENT);
 						m_curr2_samples[m_sample_now] = ADC_curr_norm_value[5] * (8.0 / FAC_CURRENT);	
 					}
-
 					m_ph1_samples[m_sample_now] = ADC_V_L4 - zero;
 					m_ph2_samples[m_sample_now] = ADC_V_L5 - zero;
 					m_ph3_samples[m_sample_now] = ADC_V_L6 - zero;
@@ -2180,10 +2183,15 @@ void mc_interface_mc_timer_isr(bool is_second_motor, float dt) {
 						m_curr1_samples[m_sample_now] = ADC_curr_norm_value[1] * (8.0 / FAC_CURRENT);
 						m_curr2_samples[m_sample_now] = ADC_curr_norm_value[2] * (8.0 / FAC_CURRENT);
 					}					
-
+					#ifndef	 HW_HAS_NO_PHASE_VSENSE
 					m_ph1_samples[m_sample_now] = ADC_V_L1 - zero;
 					m_ph2_samples[m_sample_now] = ADC_V_L2 - zero;
 					m_ph3_samples[m_sample_now] = ADC_V_L3 - zero;
+					#else
+					m_ph1_samples[m_sample_now] = mcpwm_foc_get_v_alpha();
+					m_ph2_samples[m_sample_now] = -0.5f * mcpwm_foc_get_v_alpha() + SQRT3_BY_2 * mcpwm_foc_get_v_beta();
+					m_ph3_samples[m_sample_now] = -0.5f * mcpwm_foc_get_v_alpha() - SQRT3_BY_2 * mpwm_foc_get_v_beta();
+					#endif
 				}
 			}
 
