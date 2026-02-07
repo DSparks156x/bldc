@@ -3686,15 +3686,9 @@ void mcpwm_foc_adc_int_handler(void *p, uint32_t flags) {
 		motor_now->m_motor_state.id_override_hfi = false;
 		motor_now->m_hfi.angle = motor_now->m_motor_state.phase;
 
-<<<<<<< HEAD
 		float s = motor_now->m_motor_state.phase_sin;
 		float c = motor_now->m_motor_state.phase_cos;
-
-=======
-		float s = state_now->phase_sin;
-		float c = state_now->phase_cos;
 		#ifndef HW_HAS_NO_PHASE_VSENSE
->>>>>>> d13237a5 (adds support for HW_NO_PHASE_VSENSE and HW_SHUNT_1_2, minor tweak to gt core.)
 		// Park transform
 		float vd_tmp = c * motor_now->m_motor_state.v_alpha + s * motor_now->m_motor_state.v_beta;
 		float vq_tmp = c * motor_now->m_motor_state.v_beta  - s * motor_now->m_motor_state.v_alpha;
@@ -3702,9 +3696,9 @@ void mcpwm_foc_adc_int_handler(void *p, uint32_t flags) {
 		UTILS_NAN_ZERO(motor_now->m_motor_state.vd);
 		UTILS_NAN_ZERO(motor_now->m_motor_state.vq);
 
-<<<<<<< HEAD
 		UTILS_LP_FAST(motor_now->m_motor_state.vd, vd_tmp, 0.2);
 		UTILS_LP_FAST(motor_now->m_motor_state.vq, vq_tmp, 0.2);
+		#endif
 
 		// Set the current controller integrator to the BEMF voltage to avoid
 		// a current spike when the motor is driven again. Notice that we have
@@ -3712,19 +3706,9 @@ void mcpwm_foc_adc_int_handler(void *p, uint32_t flags) {
 		motor_now->m_motor_state.vd_int = motor_now->m_motor_state.vd;
 		motor_now->m_motor_state.vq_int = motor_now->m_motor_state.vq;
 
-=======
-		UTILS_LP_FAST(state_now->vd, vd_tmp, 0.2);
-		UTILS_LP_FAST(state_now->vq, vq_tmp, 0.2);
-		#endif
-		// Set the current controller integrator to the BEMF voltage to avoid
-		// a current spike when the motor is driven again. Notice that we have
-		// to take decoupling into account.
-		state_now->vd_int = state_now->vd;
-		state_now->vq_int = state_now->vq;
 		#ifdef HW_HAS_NO_PHASE_VSENSE
-		state_now->vq_int -= motor_now->m_pll_speed * conf_now->foc_motor_flux_linkage;
+		motor_now->m_motor_state.vq_int -= motor_now->m_pll_speed * conf_now->foc_motor_flux_linkage;
 		#else
->>>>>>> d13237a5 (adds support for HW_NO_PHASE_VSENSE and HW_SHUNT_1_2, minor tweak to gt core.)
 		if (conf_now->foc_cc_decoupling == FOC_CC_DECOUPLING_BEMF ||
 				conf_now->foc_cc_decoupling == FOC_CC_DECOUPLING_CROSS_BEMF) {
 			motor_now->m_motor_state.vq_int -= motor_now->m_pll_speed * conf_now->foc_motor_flux_linkage;
