@@ -1442,6 +1442,7 @@ typedef struct __attribute__((packed)) {
 	uint8_t hw_config[128];
 
 	// Encoder correction table
+<<<<<<< HEAD
 	uint32_t enc_corr_init_flag;
 	int8_t enc_corr_en;
 	int8_t enc_corr[360];
@@ -1452,6 +1453,10 @@ typedef struct __attribute__((packed)) {
 	uint8_t can_id;
 
 	uint8_t dummy;
+=======
+	int8_t enc_corr_en;
+	int8_t enc_corr[360];
+>>>>>>> 21b41717a8986589fc707896ec108df3bd7650ca
 } backup_data;
 
 #endif /* DATATYPES_H_ */

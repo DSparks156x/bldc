@@ -93,6 +93,9 @@ float mcpwm_foc_get_v_beta(void);
 float mcpwm_foc_get_est_lambda(void);
 float mcpwm_foc_get_est_res(void);
 float mcpwm_foc_get_est_ind(void);
+float mcpwm_foc_get_va(void);//gt stuff
+float mcpwm_foc_get_vb(void);
+float mcpwm_foc_get_vc(void);
 volatile const hfi_state_t *mcpwm_foc_get_hfi_state(void);
 int mcpwm_foc_encoder_detect(float current, bool print, float *offset, float *ratio, bool *inverted);
 int mcpwm_foc_measure_resistance(float current, int samples, bool stop_after, float *resistance);

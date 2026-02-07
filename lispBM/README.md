@@ -1945,8 +1945,11 @@ Returns a list of phases and various phase errors, all sampled at the same time.
     err_observer_encoder  ; Phase error between observer and encoder
     err_bemf_encoder      ; Phase error between back-emf and encoder
     err_observer_bemf     ; Phase error between observer and back-emf
+<<<<<<< HEAD
     phase_hall            ; Phase derived from the hall sensors (FW 7.00+)
     err_bemf_hall         ; Phase error between back-emf and hall sensors (FW 7.00+)
+=======
+>>>>>>> 21b41717a8986589fc707896ec108df3bd7650ca
 )
 ```
 
@@ -2005,6 +2008,7 @@ Example:
 
 ---
 
+<<<<<<< HEAD
 #### enc-sample
 
 | Platforms | Firmware |
@@ -2053,6 +2057,8 @@ Note that the example above is not complete and many more than 800 samples are r
 
 ---
 
+=======
+>>>>>>> 21b41717a8986589fc707896ec108df3bd7650ca
 ### Setup Values
 
 These commands return the accumulated values from all VESC-based motor controllers on the CAN-bus. Note that the corresponding CAN status messages must be activated for these commands to work.

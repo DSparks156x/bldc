@@ -90,18 +90,34 @@ static volatile bool pid_thd_stop;
 		TIM8->CCR3 = duty3; \
 		TIM8->CR1 &= ~TIM_CR1_UDIS;
 #else
-#define TIMER_UPDATE_DUTY_M1(duty1, duty2, duty3) \
+	#ifdef HW_SHUNT_1_2 //GT isnt a 3 shunt but its current measurement is on phase 1 and 2.... 
+	#define TIMER_UPDATE_DUTY_M1(duty1, duty2, duty3) \
+		TIM1->CR1 |= TIM_CR1_UDIS; \
+		TIM1->CCR1 = duty1; \
+		TIM1->CCR2 = duty2; \
+		TIM1->CCR3 = duty3; \
+		TIM1->CR1 &= ~TIM_CR1_UDIS;
+
+	#define TIMER_UPDATE_DUTY_M2(duty1, duty2, duty3) \
+		TIM8->CR1 |= TIM_CR1_UDIS; \
+		TIM8->CCR1 = duty1; \
+		TIM8->CCR2 = duty2; \
+		TIM8->CCR3 = duty3; \
+		TIM8->CR1 &= ~TIM_CR1_UDIS;
+	#else
+	#define TIMER_UPDATE_DUTY_M1(duty1, duty2, duty3) \
 		TIM1->CR1 |= TIM_CR1_UDIS; \
 		TIM1->CCR1 = duty1; \
 		TIM1->CCR2 = duty3; \
 		TIM1->CCR3 = duty2; \
 		TIM1->CR1 &= ~TIM_CR1_UDIS;
-#define TIMER_UPDATE_DUTY_M2(duty1, duty2, duty3) \
+	#define TIMER_UPDATE_DUTY_M2(duty1, duty2, duty3) \
 		TIM8->CR1 |= TIM_CR1_UDIS; \
 		TIM8->CCR1 = duty1; \
 		TIM8->CCR2 = duty3; \
 		TIM8->CCR3 = duty2; \
 		TIM8->CR1 &= ~TIM_CR1_UDIS;
+	#endif
 #endif
 
 #define TIMER_UPDATE_SAMP(samp) \
@@ -1401,7 +1417,11 @@ float mcpwm_foc_get_phase_observer(void) {
 
 float mcpwm_foc_get_phase_bemf(void) {
 	float phase_bemf = RAD2DEG_f(atan2f(mcpwm_foc_get_v_beta(), mcpwm_foc_get_v_alpha()));
+<<<<<<< HEAD
 	phase_bemf -= SIGN(get_motor_now()->m_pll_speed) * 90.0;
+=======
+	phase_bemf -= 90.0;
+>>>>>>> 21b41717a8986589fc707896ec108df3bd7650ca
 	utils_norm_angle(&phase_bemf);
 	return phase_bemf;
 }
@@ -1457,6 +1477,20 @@ float mcpwm_foc_get_est_lambda(void) {
 float mcpwm_foc_get_est_res(void) {
 	return get_motor_now()->m_res_est;
 }
+
+float mcpwm_foc_get_va(void) { //gt things
+	return get_motor_now()->m_motor_state.va;
+}
+
+float mcpwm_foc_get_vb(void) {
+	return get_motor_now()->m_motor_state.vb;
+}
+
+float mcpwm_foc_get_vc(void) {
+	return get_motor_now()->m_motor_state.vc;
+}
+
+
 
 // NOTE: Requires the regular HFI sensor mode to run
 float mcpwm_foc_get_est_ind(void) {
@@ -3163,17 +3197,29 @@ void mcpwm_foc_adc_int_handler(void *p, uint32_t flags) {
 				if (tim->CCR1 <= tim->CCR2 && tim->CCR1 <= tim->CCR3) {
 					// Curr 0 is best
 					curr1 = curr0 * utils_fast_cos(phase_next - DEG2RAD_f(120.0)) / utils_fast_cos(phase_next);
+<<<<<<< HEAD
 //					curr1 = state_now->i_abs * utils_fast_sin(-phase_next - DEG2RAD_f(120.0));
+=======
+//					curr1 = motor_now->m_motor_state.i_abs * utils_fast_sin(-phase_next - DEG2RAD_f(120.0));
+>>>>>>> 21b41717a8986589fc707896ec108df3bd7650ca
 					curr2 = -(curr0 + curr1);
 				} else if (tim->CCR2 <= tim->CCR1 && tim->CCR2 <= tim->CCR3) {
 					// Curr 1 is best
 					curr0 = curr1 * utils_fast_cos(phase_next) / utils_fast_cos(phase_next - DEG2RAD_f(120.0));
+<<<<<<< HEAD
 //					curr0 = state_now->i_abs * utils_fast_sin(-phase_next);
+=======
+//					curr0 = motor_now->m_motor_state.i_abs * utils_fast_sin(-phase_next);
+>>>>>>> 21b41717a8986589fc707896ec108df3bd7650ca
 					curr2 = -(curr0 + curr1);
 				} else if (tim->CCR3 <= tim->CCR1 && tim->CCR3 <= tim->CCR2) {
 					// Curr 2 is best
 					curr0 = curr2 * utils_fast_cos(phase_next) / utils_fast_cos(phase_next + DEG2RAD_f(120.0));
+<<<<<<< HEAD
 //					curr0 = state_now->i_abs * utils_fast_sin(-phase_next);
+=======
+//					curr0 = motor_now->m_motor_state.i_abs * utils_fast_sin(-phase_next);
+>>>>>>> 21b41717a8986589fc707896ec108df3bd7650ca
 					curr1 = -(curr0 + curr2);
 				}
 			}
@@ -3185,11 +3231,19 @@ void mcpwm_foc_adc_int_handler(void *p, uint32_t flags) {
 
 			full_clarke = false;
 
+<<<<<<< HEAD
 			float s = state_now->phase_sin;
 			float c = state_now->phase_cos;
 
 			float predict_ia = c * state_now->id - s * state_now->iq;
 			float predict_ib  = c * state_now->iq + s * state_now->id;
+=======
+			float s = motor_now->m_motor_state.phase_sin;
+			float c = motor_now->m_motor_state.phase_cos;
+
+			float predict_ia = c * motor_now->m_motor_state.id - s * motor_now->m_motor_state.iq;
+			float predict_ib  = c * motor_now->m_motor_state.iq + s * motor_now->m_motor_state.id;
+>>>>>>> 21b41717a8986589fc707896ec108df3bd7650ca
 
 			if (tim->CCR1 <= tim->CCR2 && tim->CCR1 <= tim->CCR3) {
 				// Curr 0 is best
@@ -3634,8 +3688,17 @@ void mcpwm_foc_adc_int_handler(void *p, uint32_t flags) {
 		state_now->i_abs_filter = 0.0;
 
 		// Track back emf
+<<<<<<< HEAD
 		update_valpha_vbeta(motor_now, 0.0, 0.0, 1.5 / state_now->v_bus);
 
+=======
+		#ifndef HW_HAS_NO_PHASE_SENSE
+		update_valpha_vbeta(motor_now, 0.0, 0.0);
+		#else //no phase sense cant actually track motor while its not running since current controller isnt actually, running. so we assume 0. 
+		motor_now->m_motor_state.v_alpha = 0;
+		motor_now->m_motor_state.v_beta = 0;
+		#endif
+>>>>>>> 21b41717a8986589fc707896ec108df3bd7650ca
 		// Run observer
 		foc_observer_update(state_now->v_alpha, state_now->v_beta,
 						state_now->i_alpha, state_now->i_beta,
@@ -4578,6 +4641,8 @@ static void control_current(motor_all_state_t *motor, float dt) {
 	state_m->vd = state_m->vd_int + Ierr_d * conf_now->foc_current_kp;
 	state_m->vq = state_m->vq_int + Ierr_q * conf_now->foc_current_kp;
 
+	state_m->vd_pi = state_m->vd; //storing raw pi controller voltages for use in HW_NO_PHASE_SENSE 
+	state_m->vq_pi = state_m->vq;
 	// Decoupling. Using feedforward this compensates for the fact that the equations of a PMSM
 	// are not really decoupled (the d axis current has impact on q axis voltage and visa-versa):
 	//      Resistance  Inductance   Cross terms   Back-EMF   (see www.mathworks.com/help/physmod/sps/ref/pmsm.html)
@@ -4614,6 +4679,10 @@ static void control_current(motor_all_state_t *motor, float dt) {
 	state_m->vd -= dec_vd; //Negative sign as in the PMSM equations
 	state_m->vq += dec_vq + dec_bemf;
 
+	//state_m->vd_pi = state_m->vd; //storing raw pi controller voltages for use in HW_NO_PHASE_SENSE 
+	//state_m->vq_pi = state_m->vq; //decoupling could be useful. 
+
+
 	// Calculate the max length of the voltage space vector without overmodulation.
 	// Is simply 1/sqrt(3) * v_bus. See https://microchipdeveloper.com/mct5001:start. Adds margin with max_duty.
 	float max_v_mag = ONE_BY_SQRT3 * max_duty * state_m->v_bus * conf_now->foc_overmod_factor;
@@ -4631,6 +4700,11 @@ static void control_current(motor_all_state_t *motor, float dt) {
 	//float vq_presat = state_m->vq;
 	utils_truncate_number_abs((float*)&state_m->vq, max_vq);
 	utils_truncate_number_abs((float*)&state_m->vq_int, max_vq);
+<<<<<<< HEAD
+=======
+
+	//state_m->vq_int += (state_m->vq - vq_presat);
+>>>>>>> 21b41717a8986589fc707896ec108df3bd7650ca
 
 	//state_m->vq_int += (state_m->vq - vq_presat);
 
@@ -4668,8 +4742,10 @@ static void control_current(motor_all_state_t *motor, float dt) {
 	FOC_PROFILE_LINE_FINE();
 
 	// Dead time compensated values for vd and vq. Note that these are not used to control the switching times.
+	#ifndef HW_HAS_NO_PHASE_SENSE //Dont think it make sense to do this if alpha and beta were calculated from an earlier, undecoupled vd/vq.
 	state_m->vd = c * motor->m_motor_state.v_alpha + s * motor->m_motor_state.v_beta;
 	state_m->vq = c * motor->m_motor_state.v_beta  - s * motor->m_motor_state.v_alpha;
+	#endif
 
 	mc_audio_state *audio = &motor->m_audio;
 	switch (audio->mode) {
@@ -5001,6 +5077,28 @@ static void update_valpha_vbeta(motor_all_state_t *motor, float mod_alpha, float
 		ofs_volt = conf_now->foc_offsets_voltage;
 	}
 
+#ifdef HW_HAS_NO_PHASE_SENSE //Calculate v_alpha and v_beta for HW_NO_PHASE_SENSE
+	float vd_pi_filt = 0;
+	float vq_pi_filt = 0;
+	
+	UTILS_NAN_ZERO(vd_pi_filt);
+	UTILS_NAN_ZERO(vq_pi_filt);
+	#ifndef PHASE_LP_CONSTANT
+	#define PHASE_LP_CONSTANT 0.2
+	#endif
+	UTILS_LP_FAST(vd_pi_filt, state_m->vd_pi, PHASE_LP_CONSTANT);
+	UTILS_LP_FAST(vq_pi_filt, state_m->vq_pi, PHASE_LP_CONSTANT);
+
+
+
+	//float v_alpha = state_m->phase_cos * state_m->vd_pi - state_m->phase_sin * state_m->vq_pi;
+	//float v_beta = state_m->phase_cos * state_m->vq_pi + state_m->phase_sin * state_m->vd_pi;
+
+	float v_alpha = state_m->phase_cos * vd_pi_filt - state_m->phase_sin * vq_pi_filt;
+	float v_beta = state_m->phase_cos * vq_pi_filt + state_m->phase_sin * vd_pi_filt;
+
+#endif
+
 #ifdef HW_HAS_DUAL_MOTORS
 #ifdef HW_HAS_3_SHUNTS
 	if (&m_motor_1 != motor) {
@@ -5025,13 +5123,31 @@ static void update_valpha_vbeta(motor_all_state_t *motor, float mod_alpha, float
 #endif
 #else
 #ifdef HW_HAS_3_SHUNTS
-	Va = (ADC_V_L1_VOLTS - ofs_volt[0]) * ((VIN_R1 + VIN_R2) / VIN_R2) * ADC_VOLTS_PH_FACTOR;
-	Vb = (ADC_V_L2_VOLTS - ofs_volt[1]) * ((VIN_R1 + VIN_R2) / VIN_R2) * ADC_VOLTS_PH_FACTOR;
-	Vc = (ADC_V_L3_VOLTS - ofs_volt[2]) * ((VIN_R1 + VIN_R2) / VIN_R2) * ADC_VOLTS_PH_FACTOR;
+	#ifdef HW_HAS_NO_PHASE_SENSE
+		Va = v_alpha;
+		Vb = -0.5f * v_alpha + SQRT3_BY_2 * v_beta;
+		Vc = -0.5f * v_alpha - SQRT3_BY_2 * v_beta;
+	#else
+		Va = (ADC_V_L1_VOLTS - ofs_volt[0]) * ((VIN_R1 + VIN_R2) / VIN_R2) * ADC_VOLTS_PH_FACTOR;
+		Vb = (ADC_V_L2_VOLTS - ofs_volt[1]) * ((VIN_R1 + VIN_R2) / VIN_R2) * ADC_VOLTS_PH_FACTOR;
+		Vc = (ADC_V_L3_VOLTS - ofs_volt[2]) * ((VIN_R1 + VIN_R2) / VIN_R2) * ADC_VOLTS_PH_FACTOR;
+	#endif
 #else
-	Va = (ADC_V_L1_VOLTS - ofs_volt[0]) * ((VIN_R1 + VIN_R2) / VIN_R2) * ADC_VOLTS_PH_FACTOR;
-	Vb = (ADC_V_L3_VOLTS - ofs_volt[2]) * ((VIN_R1 + VIN_R2) / VIN_R2) * ADC_VOLTS_PH_FACTOR;
-	Vc = (ADC_V_L2_VOLTS - ofs_volt[1]) * ((VIN_R1 + VIN_R2) / VIN_R2) * ADC_VOLTS_PH_FACTOR;
+	#ifdef HW_HAS_NO_PHASE_SENSE
+		#ifdef HW_SHUNT_1_2 //phase 2 and 3 are flipped on "normal" 2 shunt vescs. they are not flipped on GT.
+		Va = v_alpha;
+		Vb = -0.5f * v_alpha + SQRT3_BY_2 * v_beta;  
+		Vc = -0.5f * v_alpha - SQRT3_BY_2 * v_beta;
+		#else
+		Va = v_alpha;
+		Vb = -0.5f * v_alpha - SQRT3_BY_2 * v_beta;
+		Vc = -0.5f * v_alpha + SQRT3_BY_2 * v_beta;
+		#endif
+	#else
+		Va = (ADC_V_L1_VOLTS - ofs_volt[0]) * ((VIN_R1 + VIN_R2) / VIN_R2) * ADC_VOLTS_PH_FACTOR;
+		Vb = (ADC_V_L3_VOLTS - ofs_volt[2]) * ((VIN_R1 + VIN_R2) / VIN_R2) * ADC_VOLTS_PH_FACTOR;
+		Vc = (ADC_V_L2_VOLTS - ofs_volt[1]) * ((VIN_R1 + VIN_R2) / VIN_R2) * ADC_VOLTS_PH_FACTOR;
+	#endif
 #endif
 #endif
 
@@ -5064,9 +5180,10 @@ static void update_valpha_vbeta(motor_all_state_t *motor, float mod_alpha, float
 
 	// v_alpha = 2/3*Va - 1/3*Vb - 1/3*Vc
 	// v_beta  = 1/sqrt(3)*Vb - 1/sqrt(3)*Vc
+	#ifndef HW_HAS_NO_PHASE_SENSE //No sense to do these calculations if the inverse was done for the phase voltages.
 	float v_alpha = (1.0 / 3.0) * (2.0 * Va - Vb - Vc);
 	float v_beta = ONE_BY_SQRT3 * (Vb - Vc);
-
+	#endif
 	// Keep the modulation updated so that the filter stays updated
 	// even when the motor is undriven.
 	if (motor->m_state != MC_STATE_RUNNING) {

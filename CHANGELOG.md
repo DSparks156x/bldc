@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ### 7.00
 #### TBD
 * Configurable HFI reset ERPM.
@@ -9,6 +10,8 @@
 * Persistent CAN ID and CAN Baud across firmware updates.
 * Better current controller circle limiting.
 
+=======
+>>>>>>> 21b41717a8986589fc707896ec108df3bd7650ca
 ### 6.06
 #### 2025-08-18
 * LispBM:

@@ -339,13 +339,19 @@ static bool lib_io_read(VESC_PIN pin_vesc) {
 
 static float lib_io_read_analog(VESC_PIN pin_vesc) {
 	float res = -1.0;
-
+	#ifdef HW_EXT_ADC_INVERTED //inverts ext adc for packages for a certain controller
+	if (pin_vesc == VESC_PIN_ADC1) {
+		res = 3.3 - ADC_VOLTS(ADC_IND_EXT);
+	} else if (pin_vesc == VESC_PIN_ADC2) {
+		res = 3.3 - ADC_VOLTS(ADC_IND_EXT2);
+	}
+	#else
 	if (pin_vesc == VESC_PIN_ADC1) {
 		res = ADC_VOLTS(ADC_IND_EXT);
 	} else if (pin_vesc == VESC_PIN_ADC2) {
 		res = ADC_VOLTS(ADC_IND_EXT2);
 	}
-
+	#endif
 	return res;
 }
 

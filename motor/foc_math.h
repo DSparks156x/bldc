@@ -61,6 +61,8 @@ typedef struct {
 	float vq;
 	float vd_int;
 	float vq_int;
+	float vd_pi; //used for HW_NO_PHASE_SENSE
+	float vq_pi;
 	uint32_t svm_sector;
 	bool is_using_phase_filters;
 } motor_state_t;

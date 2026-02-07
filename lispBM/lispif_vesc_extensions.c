@@ -2335,16 +2335,24 @@ static lbm_value ext_phase_all(lbm_value *args, lbm_uint argn) {
 	float phase_encoder = mcpwm_foc_get_phase_encoder();
 	float phase_bemf = mcpwm_foc_get_phase_bemf();
 	float pos_encoder = encoder_read_deg();
+<<<<<<< HEAD
 	float phase_hall = mcpwm_foc_get_phase_hall();
+=======
+>>>>>>> 21b41717a8986589fc707896ec108df3bd7650ca
 
 	float err_observer_encoder = utils_angle_difference(mcpwm_foc_get_phase_observer(), mcpwm_foc_get_phase_encoder());
 	float err_bemf_encoder = utils_angle_difference(mcpwm_foc_get_phase_bemf(), mcpwm_foc_get_phase_encoder());
 	float err_observer_bemf = utils_angle_difference(mcpwm_foc_get_phase_observer(), mcpwm_foc_get_phase_bemf());
+<<<<<<< HEAD
 	float err_bemf_hall = utils_angle_difference(mcpwm_foc_get_phase_bemf(), mcpwm_foc_get_phase_hall());
 
 	lbm_value phase_all = ENC_SYM_NIL;
 	phase_all = lbm_cons(lbm_enc_float(err_bemf_hall), phase_all);
 	phase_all = lbm_cons(lbm_enc_float(phase_hall), phase_all);
+=======
+
+	lbm_value phase_all = ENC_SYM_NIL;
+>>>>>>> 21b41717a8986589fc707896ec108df3bd7650ca
 	phase_all = lbm_cons(lbm_enc_float(err_observer_bemf), phase_all);
 	phase_all = lbm_cons(lbm_enc_float(err_bemf_encoder), phase_all);
 	phase_all = lbm_cons(lbm_enc_float(err_observer_encoder), phase_all);
@@ -2357,6 +2365,7 @@ static lbm_value ext_phase_all(lbm_value *args, lbm_uint argn) {
 
 }
 
+<<<<<<< HEAD
 typedef struct {
 	int samples;
 	uint8_t *data;
@@ -2418,6 +2427,8 @@ static lbm_value ext_enc_sample(lbm_value *args, lbm_uint argn) {
 	return ENC_SYM_TRUE;
 }
 
+=======
+>>>>>>> 21b41717a8986589fc707896ec108df3bd7650ca
 static lbm_value ext_enc_corr(lbm_value *args, lbm_uint argn) {
 	LBM_CHECK_NUMBER_ALL();
 
@@ -3108,9 +3119,15 @@ static lbm_value ext_raw_adc_voltage(lbm_value *args, lbm_uint argn) {
 		return ENC_SYM_EERROR;
 #endif
 	} else if (motor == 1) {
+		#ifndef HW_HAS_NO_PHASE_SENSE
 		Va = (ADC_V_L1_VOLTS - ofs1) * scale;
 		Vb = (ADC_V_L2_VOLTS - ofs2) * scale;
 		Vc = (ADC_V_L3_VOLTS - ofs3) * scale;
+		#else
+		Va = mcpwm_foc_get_va();
+		Vb = mcpwm_foc_get_vb();
+		Vc = mcpwm_foc_get_vc();
+		#endif
 	} else {
 		return ENC_SYM_EERROR;
 	}
@@ -6224,7 +6241,10 @@ void lispif_load_vesc_extensions(bool main_found) {
 		lbm_add_extension("phase-observer", ext_phase_observer);
 		lbm_add_extension("observer-error", ext_observer_error);
 		lbm_add_extension("phase-all", ext_phase_all);
+<<<<<<< HEAD
 		lbm_add_extension("enc-sample", ext_enc_sample);
+=======
+>>>>>>> 21b41717a8986589fc707896ec108df3bd7650ca
 		lbm_add_extension("enc-corr", ext_enc_corr);
 		lbm_add_extension("enc-corr-en", ext_enc_corr_en);
 
