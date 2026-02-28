@@ -494,7 +494,7 @@
 #define MCCONF_FOC_FW_RAMP_TIME			0.0 // Ramp time for field weakening current
 #endif
 #ifndef MCCONF_FOC_FW_Q_CURRENT_FACTOR
-#define MCCONF_FOC_FW_Q_CURRENT_FACTOR	0.1 // Factor of the FW-current to feed to the Q-axis to slow motor down when setting 0 current
+#define MCCONF_FOC_FW_Q_CURRENT_FACTOR	0.05 // Factor of the FW-current to feed to the Q-axis to slow motor down when setting 0 current
 #endif
 #ifndef MCCONF_FOC_SPEED_SOURCE
 #define MCCONF_FOC_SPEED_SOURCE			FOC_SPEED_SRC_CORRECTED // Position source for speed trackers
