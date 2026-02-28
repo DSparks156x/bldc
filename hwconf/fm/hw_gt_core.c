@@ -104,6 +104,10 @@ void hw_init_gpio(void) {
 	//palSetPadMode(GPIOB, 0, PAL_MODE_INPUT_ANALOG);//current phase 1 vref - not really need. offset calibration inherently handles these. 
 	//palSetPadMode(GPIOB, 1, PAL_MODE_INPUT_ANALOG);//current phase 2 vref 
 
+	// BMS RS485 Direction
+	palSetPadMode(HW_BMS_DERE_PORT, HW_BMS_DERE_PIN, PAL_MODE_OUTPUT_PUSHPULL | PAL_STM32_OSPEED_HIGHEST);
+	palClearPad(HW_BMS_DERE_PORT, HW_BMS_DERE_PIN);
+
 	buzzer_beep();
 	
 	//Terminal stuff
