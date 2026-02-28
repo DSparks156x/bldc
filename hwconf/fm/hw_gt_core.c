@@ -119,6 +119,7 @@ void hw_init_gpio(void) {
 		0,
 		terminal_cmd_gt_get_humidity);
 
+	gtbms_init();
 }
 
 void hw_setup_adc_channels(void) {

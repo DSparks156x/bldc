@@ -23,6 +23,12 @@
 #define HW_MAJOR				4
 #define HW_MINOR				20
 
+#define QMLUI_SOURCE_HW		"hwconf/fm/gt/qmlui_gt.c"
+#define QMLUI_HEADER_HW		"hwconf/fm/gt/qmlui_gt.h"
+#define QMLUI_HW_FULLSCREEN
+
+#include "gtbms.h"
+
 // HW properties
 #define HW_HAS_PHASE_SHUNTS //It has phase shunts alright, only 2 of em.
 #define HW_SHUNT_1_2 //phase shunts are on 1 and 2. Vesc otherwise orders things differently. 
