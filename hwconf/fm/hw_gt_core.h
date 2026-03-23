@@ -25,8 +25,8 @@
 
 // HW properties
 #define HW_HAS_PHASE_SHUNTS //It has phase shunts alright, only 2 of em.
-#define HW_SHUNT_1_2 //phase shunts are on 1 and 2. Vesc otherwise orders things differently. 
-#define HW_NO_PHASE_VSENSE //It has no phase voltage sensing. why. 
+//#define HW_SHUNT_1_2 //phase shunts are on 1 and 2. Vesc otherwise orders things differently. 
+#define HW_HAS_NO_PHASE_VSENSE //It has no phase voltage sensing. why. 
 #define HW_USE_INTERNAL_RC  
 #define HW_HAS_INPUT_CURRENT_SENSOR //gt basically an axiom. 
 #define HW_HAS_NO_CAN //why would gt have this.
@@ -119,7 +119,11 @@
 #endif
 #endif
 
-
+#ifndef HW_SHUNT_1_2
+#define HW_HAS_PHASE_SHUNTS
+#define GET_CURRENT3()			(-(GET_CURRENT1() - 2048.0 + GET_CURRENT2() -2048.0) + 2048.0)
+#define GET_INJ_CURRENT3()		(-(GET_INJ_CURRENT1() - 2048.0 + GET_INJ_CURRENT2() -2048.0) + 2048.0)
+#endif
 
 // Input voltage
 #define GET_INPUT_VOLTAGE()		((V_REG / 4095.0) * (float)ADC_Value[ADC_IND_VIN_SENS] * ((VIN_R1 + VIN_R2) / VIN_R2))
