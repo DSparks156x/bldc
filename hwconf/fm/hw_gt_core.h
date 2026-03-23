@@ -26,7 +26,8 @@
 // HW properties
 #define HW_HAS_PHASE_SHUNTS //It has phase shunts alright, only 2 of em.
 //#define HW_SHUNT_1_2 //phase shunts are on 1 and 2. Vesc otherwise orders things differently. 
-#define HW_HAS_NO_PHASE_VSENSE //It has no phase voltage sensing. why. 
+//#define HW_HAS_NO_PHASE_VSENSE //It has no phase voltage sensing. why. 
+#define HW_ADC_INVERT //inverts footpad ADCs
 #define HW_USE_INTERNAL_RC  
 #define HW_HAS_INPUT_CURRENT_SENSOR //gt basically an axiom. 
 #define HW_HAS_NO_CAN //why would gt have this.
@@ -143,7 +144,11 @@
 #define NTC_TEMP_MOTOR(beta)	(1.0 / ((logf(NTC_RES_MOTOR(ADC_Value[ADC_IND_TEMP_MOTOR]) / 10000.0) / beta) + (1.0 / 298.15)) - 273.15)
 
 // Voltage on ADC channel
+#ifdef HW_ADC_INVERT
+#define ADC_VOLTS(ch)			((4096 - (float)ADC_Value[ch]) / 4096.0 * V_REG)
+#else
 #define ADC_VOLTS(ch)			((float)ADC_Value[ch] / 4096.0 * V_REG)
+#endif
 
 // Footpad ADC GPIOs
 #define HW_ADC_EXT_GPIO			GPIOC
