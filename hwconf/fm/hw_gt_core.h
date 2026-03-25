@@ -61,6 +61,7 @@
 #define ADC_IND_SENS3			8 //
 #define ADC_IND_CURR1			0
 #define ADC_IND_CURR2			1
+#define ADC_IND_CURR3           0 // Fallback to Index 0 to share Phase A offset during calibration
 #define ADC_IND_INCURR			2 //HW gt will go brrr. 
 #define ADC_IND_VIN_SENS		8
 #define ADC_IND_EXT				3
@@ -121,7 +122,7 @@
 #endif
 
 #ifndef HW_SHUNT_1_2
-#define HW_HAS_PHASE_SHUNTS
+#define HW_HAS_3_SHUNTS
 #define GET_CURRENT3()			(-(GET_CURRENT1() - 2048.0 + GET_CURRENT2() -2048.0) + 2048.0)
 #define GET_INJ_CURRENT3()		(-(GET_INJ_CURRENT1() - 2048.0 + GET_INJ_CURRENT2() -2048.0) + 2048.0)
 #endif
